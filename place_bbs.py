@@ -110,7 +110,7 @@ def scaled_node_and_edge_vectors(sc_coords, sc_omega_plus, sc_unit_cell, ea_dict
 	nvecs_append = nvecs.append
 	evecs_append = evecs.append
 	already_placed_edges_append = already_placed_edges.append
-
+	# add node_placed_edges for boundary edge and node check 
 	node_placed_edges = []
 	node_placed_edges_append = node_placed_edges.append
 	for n in sc_coords:
@@ -184,12 +184,12 @@ def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
 
 		bbind = bbind + 1
 		name,cvec,cif,nvec = n
-		ll = 0
-
-		for v in nvec:
-			mag = np.linalg.norm(v - np.average(nvec, axis = 0))
-			if mag > ll:
-				ll = mag
+		#ll = 0
+		#
+		#for v in nvec:
+		#	mag = np.linalg.norm(v - np.average(nvec, axis = 0))
+		#	if mag > ll:
+		#		ll = mag
 
 		bbxvec = np.array(X_vecs(cif,'nodes',False))
 

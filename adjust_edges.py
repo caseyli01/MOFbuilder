@@ -106,10 +106,10 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	cleaved_placed_nodes = []
 	cleaved_placed_nodes_append= cleaved_placed_nodes.append
 	for i in placed_nodes:
-		if re.sub('[0-9]','',i[5]) == 'X':
-			if list(map(float,i[1:4])) not in xos_vec:
-				cleaved_placed_nodes_append(i)
-		elif re.sub('[0-9]','',i[5]) == 'O':
+		#if re.sub('[0-9]','',i[5]) == 'X':
+		#	if list(map(float,i[1:4])) not in xos_vec:
+		#		cleaved_placed_nodes_append(i)
+		if re.sub('[0-9]','',i[5]) == 'O':
 			if list(map(float,i[1:4])) not in xos_vec:
 				cleaved_placed_nodes_append(i)
 		else:

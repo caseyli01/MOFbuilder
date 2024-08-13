@@ -69,7 +69,7 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	#o_ty = node_oxy[:,6]
 
 
-	node_oxy = np.asarray([i for i in placed_nodes if re.sub('[0-9]','',i[5]) == 'O'])
+	node_oxy = np.asarray([i for i in placed_nodes if re.sub('[0-9]','',i[0]) == 'O']) ##FIXME:i[5]) == 'O' will cause error if node.cif doesnt have extra O 
 	no_elems = node_oxy[:,0]
 	node_oxy_points = [list(map(float,i)) for i in node_oxy[:,1:4]]
 	no_charges = node_oxy[:,4]
@@ -79,7 +79,7 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	'''look for two nearest Oxys for every X'''
 	X_Opair = []
 	X_Opair_append = X_Opair.append
-	for i in range(len(node_connection_points)):
+	for i in range(len(node_connection_points)): #for every X point 
 		cdist_xos = []
 		cdist_xos_sort = []
 		cdist_xos_append=cdist_xos.append
@@ -96,24 +96,28 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 		cdist_xos_sort3rd=cdist_xos_sort[2]
 		#print(f"cdist_xos_sort3rd{cdist_xos_sort3rd},\ncdist_xos_sort{cdist_xos_sort}")
 		opair=[index for index,value in enumerate(cdist_xos) if value < cdist_xos_sort3rd]
-		X_Opair_append(('X'+str(i),node_connection_points[i],(opair),[node_oxy_points[i] for i in opair]))
+		X_Opair_append(('X'+str(i),node_connection_points[i],(opair),[node_oxy_points[k] for k in opair]))
 	
 	'''cleave placed_nodes remove X_Opair, but future need add dummy atom(can be applied in node cif file )'''
-	stacked_opairs = np.asarray([i[3] for i in X_Opair])
-	opairs_vec= stacked_opairs.reshape(-1, stacked_opairs.shape[-1])
-	xs_vec = np.asarray([i[1] for i in X_Opair])
-	xos_vec = np.vstack((opairs_vec,xs_vec))
+	print(f"X_Opair{X_Opair}")
+
+	opairs_vec= [j for i in X_Opair for j in i[3]]
+	xs_vec = [i[1]  for i in X_Opair]
+	xos_vec = opairs_vec+xs_vec
 	cleaved_placed_nodes = []
 	cleaved_placed_nodes_append= cleaved_placed_nodes.append
 	for i in placed_nodes:
-		#if re.sub('[0-9]','',i[5]) == 'X':
-		#	if list(map(float,i[1:4])) not in xos_vec:
-		#		cleaved_placed_nodes_append(i)
-		if re.sub('[0-9]','',i[5]) == 'O':
+		if re.sub('[0-9]','',i[5]) == 'X':
+			#if list(map(float,i[1:4])) not in xos_vec:
+				cleaved_placed_nodes_append(i)
+
+		elif re.sub('[0-9]','',i[5]) == 'O':
 			if list(map(float,i[1:4])) not in xos_vec:
 				cleaved_placed_nodes_append(i)
+
 		else:
 			cleaved_placed_nodes_append(i)
+
 
 	for edge in placed_edges:
 		ty = int(edge[-1])

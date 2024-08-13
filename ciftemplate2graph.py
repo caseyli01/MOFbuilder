@@ -71,9 +71,9 @@ def PBC3DF(c1, c2):
     
     return c2
 
-def ct2g(cifname):
+def ct2g(cifname,template_dir):
 
-	path = os.path.join('templates', cifname)
+	path = os.path.join(template_dir, cifname)
 
 	with open(path, 'r') as template:
 		template = template.read()

@@ -171,7 +171,7 @@ def scaled_node_and_edge_vectors(sc_coords, sc_omega_plus, sc_unit_cell, ea_dict
 
 	return nvecs, evecs,node_placed_edges
 
-def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
+def place_nodes(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 
 	placed_nbb_coords = []
 	placed_nbb_coords_extend = placed_nbb_coords.extend
@@ -191,7 +191,7 @@ def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
 		#	if mag > ll:
 		#		ll = mag
 
-		bbxvec = np.array(X_vecs(cif,'nodes',False))
+		bbxvec = np.array(X_vecs(cif,nodes_dir,False))
 
 		#if ORIENTATION_DEPENDENT_NODES:
 		nbbxvec = bbxvec
@@ -200,11 +200,12 @@ def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
 
 		min_dist,rot,tran = superimpose(nbbxvec,nvec)
 
-		all_bb = bb2array(cif, 'nodes')
+		all_bb = bb2array(cif, nodes_dir)
 		all_coords = np.array([v[1] for v in all_bb])
 		all_inds = np.array([v[0] for v in all_bb])
-		chg, elem = bbcharges(cif, 'nodes')
+		chg, elem = bbcharges(cif, nodes_dir)
 		all_names = [o + re.sub('[A-Za-z]','',p) for o,p in zip(elem,all_inds)]
+		#print(f'all_name{all_names}')
 
 		all_names_indices = np.array([int(re.sub('[A-Za-z]','',e)) for e in all_names]) + ind_seg
 
@@ -216,7 +217,7 @@ def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
 		for i,j in zip(all_inds, all_names_indices):
 			ind_dict[i] = j
 
-		bonds = bbbonds(cif, 'nodes')
+		bonds = bbbonds(cif, nodes_dir)
 
 		anf = [str(elem_dict[n]) + str(ind_dict[n]) for n in all_inds]
 
@@ -236,7 +237,7 @@ def place_nodes(nvecs, charges, ORIENTATION_DEPENDENT_NODES):
 
 	return placed_nbb_coords, all_bonds
 
-def place_edges(evecs, charges, nnodes):
+def place_edges(evecs, edges_dir,charges, nnodes):
 
 	placed_ebb_coords = []
 	placed_ebb_coords_extend = placed_ebb_coords.extend
@@ -256,7 +257,7 @@ def place_edges(evecs, charges, nnodes):
 			if mag > ll:
 				ll = mag	
 
-		bbxvec  = np.array(X_vecs(cif,'edges',False))
+		bbxvec  = np.array(X_vecs(cif,edges_dir,False))
 		nbbxvec = np.array([ll*(v / np.linalg.norm(v)) for v in bbxvec])
 
 		min_dist,rot,tran = superimpose(nbbxvec,evec)

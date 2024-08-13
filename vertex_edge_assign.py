@@ -8,7 +8,7 @@ from place_bbs import superimpose, mag_superimpose
 from ciftemplate2graph import node_vecs
 import warnings
 
-def vertex_assign(TG, TVT, node_cns, unit_cell, USNA, SYM_TOL, ALL_NODE_COMBINATIONS):
+def vertex_assign(nodes_dir,TG, TVT, node_cns, unit_cell, USNA, SYM_TOL, ALL_NODE_COMBINATIONS):
 
 	node_dict = dict((k,[]) for k in TVT)
 
@@ -80,7 +80,7 @@ def vertex_assign(TG, TVT, node_cns, unit_cell, USNA, SYM_TOL, ALL_NODE_COMBINAT
 					for cif in node_dict[k]:
 
 						nvec = np.array([v/np.linalg.norm(v) for v in node_vecs(name, TG, unit_cell, False)])
-						bbxvec = np.array([v/np.linalg.norm(v) for v in X_vecs(cif, 'nodes', False)])
+						bbxvec = np.array([v/np.linalg.norm(v) for v in X_vecs(cif, nodes_dir, False)])
 						rmsd,rot,tran = superimpose(bbxvec,nvec)
 						distances_append((rmsd,cif))
 
@@ -133,7 +133,7 @@ def vertex_assign(TG, TVT, node_cns, unit_cell, USNA, SYM_TOL, ALL_NODE_COMBINAT
 					
 	return va
 
-def assign_node_vecs2edges(TG, unit_cell, SYM_TOL, template_name):
+def assign_node_vecs2edges(nodes_dir,TG, unit_cell, SYM_TOL, template_name):
 
 
 	'''
@@ -163,10 +163,10 @@ def assign_node_vecs2edges(TG, unit_cell, SYM_TOL, template_name):
 		#bbxvec: Vectors of the building block.
 		#nodvec: Node vectors after unit cell transformation.
 
-		bbxlabels = np.array([l[0] for l in X_vecs(cif, 'nodes', True)])
+		bbxlabels = np.array([l[0] for l in X_vecs(cif,nodes_dir, True)])
 		nodlabels = np.array([l[0] for l in node_vecs(n[0], TG, unit_cell, True)])
 
-		bbxvec = X_vecs(cif, 'nodes', False)
+		bbxvec = X_vecs(cif, nodes_dir, False)
 		nodvec = node_vecs(n[0], TG, unit_cell, False)
 		
 		#Superimpose Vectors

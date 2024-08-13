@@ -215,7 +215,7 @@ def bond_connected_components(placed_all, bonds_all, sc_unit_cell, max_length, b
 		if len(type0) > 1 or len(type1) > 1:
 			print(type0, type1)
 			raise ValueError('building block indicated as both node and edge type')
-
+		print(f"xname0{xname0}xname1{xname1}")
 		if len(xname0) == 0 or len(xname1) == 0:
 			raise ValueError('There are connected components with no connection site atoms')
 

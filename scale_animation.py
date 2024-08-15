@@ -22,7 +22,7 @@ def roundup(x):
 
 pi = np.pi
 
-def scaling_callback_animation(callbackresults, alpha, Bstar_inv, ncra, ncca, num_vertices, num_edges, TG, template, g, cfiles):
+def scaling_callback_animation(callbackresults, alpha, Bstar_inv, ncra, ncca, num_vertices, num_edges, TG,templates_dir, template, g, cfiles):
 					
 	frames = []
 	frames_append = frames.append
@@ -36,7 +36,7 @@ def scaling_callback_animation(callbackresults, alpha, Bstar_inv, ncra, ncca, nu
 		rc_covars = rc_covars.reshape(ncra,ncca)
 		rc_Alpha = np.r_[alpha[0:num_edges-num_vertices+1,:], rc_covars]
 		rc_omega_plus = np.dot(Bstar_inv, rc_Alpha)
-		rc_coords = omega2coords(np.array([0.0,0.0,0.0]), TG, rc_omega_plus, uc_params, num_vertices, template, g, cfiles)
+		rc_coords = omega2coords(np.array([0.0,0.0,0.0]), TG, rc_omega_plus, uc_params, num_vertices, templates_dir,template, g, cfiles)
 
 		ax_rc = rc_a
 		ay_rc = 0.0

@@ -4,10 +4,10 @@ import re
 import os
 from ciftemplate2graph import isvert
 
-def omega2coords(start, TG, sc_omega_plus, uc_params, num_vertices, template, g, CHECK):
+def omega2coords(start, TG, sc_omega_plus, uc_params, num_vertices, templates_dir,template, g, CHECK):
 
 	sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma = uc_params
-	path = os.path.join('templates', template)
+	path = os.path.join(templates_dir, template)
 	
 	shortest_path_dict = nx.shortest_path(TG)
 	SN = sorted(TG.nodes(), key = lambda x : int(re.sub('[A-Za-z]','',x)))
@@ -64,7 +64,7 @@ def omega2coords(start, TG, sc_omega_plus, uc_params, num_vertices, template, g,
 
 	norm_coords = sorted(norm_coords, key = lambda x : int(re.sub('[A-Za-z]','',x[0])))
 
-	path = os.path.join('templates', template)
+	path = os.path.join(templates_dir, template)
 
 	with open(path, 'r') as tcif:
 

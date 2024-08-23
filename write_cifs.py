@@ -445,6 +445,61 @@ def write_cif(placed_all, fixed_bonds, scaled_params, sc_unit_cell, cifname, cha
 			out.write('{:7} {:>7} {:>5} {:>7} {:>3}'.format(e[0], e[1], "%.3f" % float(e[2]), e[3], e[4]))
 			out.write('\n')
 
+def write_cif_nobond(placed_all, scaled_params, sc_unit_cell, cifname, charges, wrap_coords=True):
+
+	sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma = scaled_params
+
+	opath = os.path.join('output_cifs', cifname)
+	
+	with open(opath, 'w') as out:
+		out.write('data_' + cifname[0:-4] + '\n')
+		out.write('_audit_creation_date              ' + datetime.datetime.today().strftime('%Y-%m-%d') + '\n')
+		out.write("_audit_creation_method            'tobacco_3.0'" + '\n')
+		out.write("_symmetry_space_group_name_H-M    'P1'" + '\n')
+		out.write('_symmetry_Int_Tables_number       1' + '\n')
+		out.write('_symmetry_cell_setting            triclinic' + '\n')
+		out.write('loop_' + '\n')
+		out.write('_symmetry_equiv_pos_as_xyz' + '\n')
+		out.write('  x,y,z' + '\n')
+		out.write('_cell_length_a                    ' + str(sc_a) + '\n')
+		out.write('_cell_length_b                    ' + str(sc_b) + '\n')
+		out.write('_cell_length_c                    ' + str(sc_c) + '\n')
+		out.write('_cell_angle_alpha                 ' + str(sc_alpha) + '\n')
+		out.write('_cell_angle_beta                  ' + str(sc_beta) + '\n')
+		out.write('_cell_angle_gamma                 ' + str(sc_gamma) + '\n')
+		out.write('loop_' + '\n')
+		out.write('_atom_site_label' + '\n')
+		out.write('_atom_site_type_symbol' + '\n')
+		out.write('_atom_site_fract_x' + '\n')
+		out.write('_atom_site_fract_y' + '\n')
+		out.write('_atom_site_fract_z' + '\n')
+		if charges:
+			out.write('_atom_site_charge' + '\n')
+
+		for l in placed_all:
+
+			vec = list(map(float, l[1:4]))
+			cvec = np.dot(np.linalg.inv(sc_unit_cell), vec)
+
+			if wrap_coords:
+				cvec = np.mod(cvec, 1) # makes sure that all fractional coordinates are in [0,1]
+
+			if charges:
+				out.write('{:7} {:>4} {:>15} {:>15} {:>15} {:>15}'.format(l[0], re.sub('[0-9]','',l[0]), "%.10f" % np.round(cvec[0],10), "%.10f" % np.round(cvec[1],10), "%.10f" % np.round(cvec[2],10), l[4]))
+				out.write('\n')
+			else:
+				out.write('{:7} {:>4} {:>15} {:>15} {:>15}'.format(l[0], re.sub('[0-9]','',l[0]), "%.10f" % np.round(cvec[0],10), "%.10f" % np.round(cvec[1],10), "%.10f" % np.round(cvec[2],10)))
+				out.write('\n')
+
+		out.write('loop_' + '\n')
+		out.write('_geom_bond_atom_site_label_1' + '\n')
+		out.write('_geom_bond_atom_site_label_2' + '\n')
+		out.write('_geom_bond_distance' + '\n')
+		out.write('_geom_bond_site_symmetry_2' + '\n')
+		out.write('_ccdc_geom_bond_type' + '\n')
+
+
+
 def cif_read(filename, charges=False):
 
 	with open(filename,'r') as f:

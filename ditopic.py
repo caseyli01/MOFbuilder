@@ -147,6 +147,24 @@ def check_edge_center_inbox(center,box_bound):
     x,y,z = center
     return (0<=x<=a and 0<=y<=b and 0<=z<=c)
 
+def check_edge_center_inbox_loose(center,box_bound,scalar):
+    a,b,c = box_bound
+    x,y,z = center
+    if (0<=x<=a and 0<=y<=b and 0<=z<=c):
+        return True
+    elif (-1*scalar<=x<=a+scalar and 0<=y<=b and 0<=z<=c):
+        return True
+    elif (0<=x<=a and -1*scalar<=y<=b+scalar and 0<=z<=c):
+        return True
+    elif (0<=x<=a and 0<=y<=b and -1*scalar<=z<=c+scalar):
+        return True
+    else:
+        return False
+    
+
+
+
+
 def check_edgex_sits_inboundary(pointx1,pointx2,box_bound):
     a,b,c = box_bound
     pointx1 = pointx1.astype(float)
@@ -189,6 +207,44 @@ def check_overlapX(edgex_cvec,nodex_cvec):
     return False
 
 
+def limit_x_range(x,a,b,l):
+    if x >b:
+        while x>b:
+            x=x-l
+        return x
+    elif x<a:
+        while x< a:
+            x = x+l
+        return x
+    else:
+        return x
+    
+
+def cut_boundary(arr,box_bound,buffer,cutx,cuty,cutz):
+    box_bound_xl,box_bound_yl,box_bound_zl = box_bound 
+    box_bound_xmin,box_bound_xmax = 0+buffer,box_bound_xl-buffer
+    box_bound_ymin,box_bound_ymax = 0+buffer,box_bound_yl-buffer
+    box_bound_zmin,box_bound_zmax = 0+buffer,box_bound_zl-buffer
+    new_arr = np.empty(arr.shape)
+    for i in range(len(arr)):
+        if cutx:
+            new_arr[i][0] = limit_x_range(arr[i][0],box_bound_xmin,box_bound_xmax,box_bound_xl)
+        else:
+            new_arr[i][0] = arr[i][0]
+        if cuty:        
+            new_arr[i][1] = limit_x_range(arr[i][1],box_bound_ymin,box_bound_ymax,box_bound_yl)
+        else:
+            new_arr[i][1] = arr[i][1]
+        if cutz:
+            new_arr[i][2] = limit_x_range(arr[i][2],box_bound_zmin,box_bound_zmax,box_bound_zl)
+        else:
+            new_arr[i][2] = arr[i][2]
+        #print(new_arr[i],arr[i], box_bound_ymin,box_bound_ymax)
+    return new_arr
+
+def fetch_X_atoms_array(array,column):
+    x_array= np.asarray([k for k in array if re.sub(r'\d','',k[column]) == 'X'])
+    return x_array
 
 def exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,box_bound):
     '''look for two nearest Oxys for every exposed(unsaturated X) in boundary nodes'''
@@ -339,7 +395,11 @@ def supercell_nodeedge_fc(supercell_Carte,target_all_fc,box_bound):
     return s_fvec_all,row_diff_idx
 
 
-def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,scalar):
+
+
+
+
+def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,scalar,cutx,cuty,cutz):
 
     old_res_idx,rescount = fetch_rescount_targetall(target_all_fc)
     fvec_all_info = np.hstack((target_all_fc[:,0:1],target_all_fc[:,4:]))
@@ -355,7 +415,8 @@ def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,sc
 
     super_ne_array2d=np.vstack((super_ne))
     super_ne_info2d=np.vstack((super_ne_info))
-    moded_super_ne_array2d = np.mod(super_ne_array2d,scalar*box_bound)
+    #moded_super_ne_array2d = np.mod(super_ne_array2d,scalar*box_bound)
+    moded_super_ne_array2d = cut_boundary(super_ne_array2d,box_bound,scalar,cutx,cuty,cutz)
     row_diff = np.any(super_ne_array2d != moded_super_ne_array2d, axis=1)
     row_diff_idx=[i for i in range(len(row_diff)) if row_diff[i]]
     s_fvec_all= np.hstack((super_ne_info2d,super_ne_array2d))
@@ -390,7 +451,10 @@ def filt_boundary_res(s_fvec_all,row_diff_idx,box_bound):
                     #print(f"69 {len(row_diff)}len(row_diff){res.shape[0]}original_fvec{original_fvec}\n{moded_fvec}")
                     kick_res_append(i)  
             diff = [moded_fvec[i]-original_fvec[i] for i in row_diff]
-            diff =np.vstack(diff).astype(float)
+            if len(diff) >0:
+                diff =np.vstack(diff).astype(float)
+            else:
+                diff = np.zeros((1,3))
             diffs=np.unique(diff,axis=0)
             diff_ele=split_diffs(diffs)
             #print('\n',diff_ele,'\n',diffs,'\n')
@@ -424,10 +488,11 @@ def filt_boundary_res(s_fvec_all,row_diff_idx,box_bound):
 
 
 
-def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar):
+def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,cuty,cutz,boundary_scalar):
     res_count_idx = set(s_fvec_all[:,-4])
     differ_res_idx = set([s_fvec_all[i][-4] for i in row_diff_idx])
     print(f"differ res idx{differ_res_idx}")
+    print(f"diff_ros{len(row_diff_idx)}, diff_res{len(differ_res_idx)}")
 
     inside_res=[]
     extra_res=[]
@@ -442,16 +507,22 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar):
             res=s_fvec_all[s_fvec_all[:,5]==i]
             original_fvec = res[:,-3:]
             original_fvec = original_fvec.astype(float)
-            moded_fvec = np.mod(original_fvec,scalar*box_bound)
+            #moded_fvec = np.mod(original_fvec,scalar*box_bound)
+            moded_fvec = cut_boundary(original_fvec,box_bound,scalar,cutx,cuty,cutz)
+            #print(f"original{original_fvec} moded{moded_fvec}")
             row_diff = diff_rows_count_two_array(original_fvec,moded_fvec)
-            #if res[0,4]=='EDGE' and len(row_diff)>(res.shape[0]-3):
-                #check if twoX sit on boundary with a tiny shift range
-               # if not check_edgex_sits_inboundary(original_fvec[2],original_fvec[5],box_bound):
-                   # print(f"kick{i}")
-                    #print(f"69 {len(row_diff)}len(row_diff){res.shape[0]}original_fvec{original_fvec}\n{moded_fvec}")
-                    #kick_res_append(i)  
+            print(f"row_diff{row_diff},original{original_fvec} moded{moded_fvec}")
+            #if (res[0,4]=='EDGE' or res[0,4]=='TEDGE') and len(row_diff)>(res.shape[0]-4):
+            #    #check if twoX sit on boundary with a tiny shift range
+            #    if not check_edgex_sits_inboundary(original_fvec[2],original_fvec[5],box_bound):
+            #        print(f"kick{i}")
+            #        #print(f"69 {len(row_diff)}len(row_diff){res.shape[0]}original_fvec{original_fvec}\n{moded_fvec}")
+            #        kick_res_append(i)  
             diff = [moded_fvec[i]-original_fvec[i] for i in row_diff]
-            diff =np.vstack(diff).astype(float)
+            if len(diff) >0:
+                diff =np.vstack(diff).astype(float)
+            else:
+                diff = np.zeros((1,3))
             diffs=np.round(np.unique(diff,axis=0),1)
             diff_ele=split_diffs(diffs)
             #print('\n',diff_ele,'\n',diffs,'\n')
@@ -461,12 +532,13 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar):
                     boundary_node_res_append(i)
                     extra_res_append(t_res)
                 elif res[0,4]=='EDGE' or res[0,4]=='TEDGE':
-                    check1 = np.mean(res[[2,5],-3:],axis=0) + np.asarray(diff_e) #edge_center
-                    check1=check1.astype(float)
-                    check1 = np.round(check1,1)
+                    x_atoms=fetch_X_atoms_array(res,2)
+                    check1 = np.mean(x_atoms[:,-3:],axis=0) + np.asarray(diff_e) #edge_center
+                    #check1=check1.astype(float)
+                    #check1 = np.round(check1,1)
                     print(i,diff_e,check1)
-                    if check_edge_center_inbox(check1,box_bound/scalar):
-                        print("in",i,diff_e)
+                    if  check_edge_center_inbox_loose(check1,box_bound,boundary_scalar):
+                        #print("in",i,diff_e)
                         #print(i,np.round(t_res_xyz[:6],5),np.round(np.mod(t_res_xyz[:6],[1,1,1]),5),diff_e)
                         t_res =  np.hstack((res[:,:6],res[:,-3:] + np.asarray(diff_e)))
                         extra_res_append(t_res)

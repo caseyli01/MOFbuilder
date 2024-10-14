@@ -1,5 +1,6 @@
 import numpy as np
 from place_bbs import superimpose
+import networkx as nx
 
 def termpdb(filename):
         inputfile = str(filename)
@@ -44,7 +45,7 @@ def is_list_A_in_B(A, B):
     return A_tuples.issubset(B_tuples)
 
 def add_terminations(term_file,ex_node_cxo_cc):
-
+    tG=nx.Graph()
     terms=[]
     node_oovecs_record=[]
     terms_append = terms.append

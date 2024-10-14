@@ -246,7 +246,7 @@ def fetch_X_atoms_array(array,column):
     x_array= np.asarray([k for k in array if re.sub(r'\d','',k[column]) == 'X'])
     return x_array
 
-def exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,box_bound):
+def _exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,box_bound):
     '''look for two nearest Oxys for every exposed(unsaturated X) in boundary nodes'''
     ex_node_cxo_cc=[]
     ex_node_cxo_cc_append=ex_node_cxo_cc.append
@@ -296,50 +296,51 @@ def exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,
     return ex_node_cxo_cc
 
 
-def exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,box_bound):
+
+def exposed_Xs_Os_boundary_node(boundary_node_res,connected_nodeedge_fc,sc_unit_cell,box_bound):
     '''look for two nearest Oxys for every exposed(unsaturated X) in boundary nodes'''
     ex_node_cxo_cc=[]
     ex_node_cxo_cc_append=ex_node_cxo_cc.append
-    edgex_fvec = filt_edgex_fvec(bare_nodeedge_fc)
+    edgex_fvec = filt_edgex_fvec(connected_nodeedge_fc)
     edgex_cvec_array = np.dot(edgex_fvec[:,-3:],sc_unit_cell)
 
-    for i in list(set(boundary_node_res)):
-        count=len(np.where(np.asarray(boundary_node_res)==i)[0])+1 # =1 is because original node + moded_nodes
-        ress_fc=bare_nodeedge_fc[bare_nodeedge_fc[:,5]==i]
-        res_s_fc=ress_fc.reshape((count,int(ress_fc.shape[0]/count),ress_fc.shape[1]))
-        for n in range(count):
-            node=res_s_fc[n]
-            node_center_fc = np.mean(node[:,-3:],axis=0)
-            Xs_fc = np.asarray([k[-3:] for k in node if re.sub(r'\d','',k[2]) == 'X'])
-            Os_fc = np.asarray([g[-3:] for g in node if re.sub(r'\d','',g[2]) == 'O'])
-            Os_cc = np.dot(Os_fc,sc_unit_cell)
-            #Xs_fc = np.dot(Xs,np.linalg.inv(sc_unit_cell))
-            Xs_fc = Xs_fc.astype(float)
-            exposed_Xs_fc=[x for x in Xs_fc if not check_nodex_inbox(x.round(4),box_bound)]
-            if len(exposed_Xs_fc)>0:
-                exposed_Xs_cc=np.dot(exposed_Xs_fc,sc_unit_cell) 
-                for x in exposed_Xs_cc:
-                    if check_overlapX(edgex_cvec_array,x):
-                        continue
-                    else:
-                        cdist_xos = []
-                        cdist_xos_sort = []
-                        cdist_xos_append=cdist_xos.append
-                        cdist_xos_sort_append=cdist_xos_sort.append
-                        for j in range(len(Os_cc)):
-                            cvec_o= Os_cc[j]
-                            #cvec_xo = np.asarray(cvec_o)-np.asarray(x) 	
-                            cvec_xo = cvec_o-x
-                            cdist_xo = np.linalg.norm(cvec_xo)
-                            cdist_xos_append(cdist_xo)
-                            cdist_xos_sort_append(cdist_xo)
-                        cdist_xos_sort.sort()
-                        cdist_xos_sort3rd=cdist_xos_sort[2]
-                        node_ovecs_idx=[index for index,value in enumerate(cdist_xos) if value < cdist_xos_sort3rd]
-                        #print(i,n,len(node_ovecs_idx))
-                        node_ovecs_cc=[Os_cc[o] for o in node_ovecs_idx]
-            
-                        ex_node_cxo_cc_append((node_center_fc,len(exposed_Xs_cc),'exposed_X',x,'node_Opair',node_ovecs_cc,node_ovecs_idx))
+    for i in list(boundary_node_res):
+        #count=len(np.where(np.asarray(boundary_node_res)==i)[0])+1 # =1 is because original node + moded_nodes
+        node=connected_nodeedge_fc[connected_nodeedge_fc[:,5]==i]
+        #res_s_fc=ress_fc.reshape((count,int(ress_fc.shape[0]/count),ress_fc.shape[1]))
+        #for n in range(count):
+   
+        node_center_fc = np.mean(node[:,-3:],axis=0)
+        Xs_fc = np.asarray([k[-3:] for k in node if re.sub(r'\d','',k[2]) == 'X'])
+        Os_fc = np.asarray([g[-3:] for g in node if re.sub(r'\d','',g[2]) == 'O'])
+        Os_cc = np.dot(Os_fc,sc_unit_cell)
+        #Xs_fc = np.dot(Xs,np.linalg.inv(sc_unit_cell))
+        Xs_fc = Xs_fc.astype(float)
+        exposed_Xs_fc=[x for x in Xs_fc if not check_nodex_inbox(x.round(4),box_bound)]
+        if len(exposed_Xs_fc)>0:
+            exposed_Xs_cc=np.dot(exposed_Xs_fc,sc_unit_cell) 
+            for x in exposed_Xs_cc:
+                if check_overlapX(edgex_cvec_array,x):
+                    continue
+                else:
+                    cdist_xos = []
+                    cdist_xos_sort = []
+                    cdist_xos_append=cdist_xos.append
+                    cdist_xos_sort_append=cdist_xos_sort.append
+                    for j in range(len(Os_cc)):
+                        cvec_o= Os_cc[j]
+                        #cvec_xo = np.asarray(cvec_o)-np.asarray(x) 	
+                        cvec_xo = cvec_o-x
+                        cdist_xo = np.linalg.norm(cvec_xo)
+                        cdist_xos_append(cdist_xo)
+                        cdist_xos_sort_append(cdist_xo)
+                    cdist_xos_sort.sort()
+                    cdist_xos_sort3rd=cdist_xos_sort[2]
+                    node_ovecs_idx=[index for index,value in enumerate(cdist_xos) if value < cdist_xos_sort3rd]
+                    #print(i,n,len(node_ovecs_idx))
+                    node_ovecs_cc=[Os_cc[o] for o in node_ovecs_idx]
+        
+                    ex_node_cxo_cc_append((node_center_fc,len(exposed_Xs_cc),'exposed_X',x,'node_Opair',node_ovecs_cc,node_ovecs_idx))
         
                     #print(f"center{node_center},Xs{len(exposed_Xs_fc)},'\n'{exposed_Xs_cc}")
             #print(res_s.shape)

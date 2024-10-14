@@ -9,7 +9,7 @@ def tempgro(output,all_array):
                 line = all_array[i]
 
                 value_atom_number = int(i + 1)  # atom_number
-                value_label = line[0]  # atom_label
+                value_label = re.sub('\d','',line[0])+re.sub('\D','',line[2])  # atom_label
                 value_resname = str(line[4])[0]  # residue_name
                 value_resnumber = line[5] # residue number
                 value_x = 0.1*float(line[6])  # x

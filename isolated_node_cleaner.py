@@ -2,7 +2,6 @@ import numpy as np
 import networkx as nx
 import re
 
-
 def reindex_frag_array(all_array,fragmentname):
     # according to atoms number in one residue(like a node has 66 atoms) to reassign res_number to residue for next call
     frag_array = all_array[all_array[:,4]== fragmentname] # fragmentname can be "EDGE" or "NODE"
@@ -36,7 +35,7 @@ def get_frag_centers_fc(refrag_fcarr):
 
 def calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics):
     #calculate and add all edge_center as node to eG, then search for node_center in a range(around closest node distance)
-    #this eG is searching neighbor nodes from edge, so the isolated nodes cannot be counted because it cannot be found from an edge 
+    #this eG is searching neighbor nodes from edge, so the absolute isolated nodes (just single node) cannot be counted because it cannot be found from an edge 
     eG=nx.Graph()
     for i in edgefc_centers:
         eG.add_nodes_from([('E'+str(i[0]), {'fc': i[1],'Odist': i[2]})])

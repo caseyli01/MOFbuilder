@@ -1,5 +1,5 @@
 data_spn_v1-3c_tricenter_v2-6c_Zr_1_Ch_1-1B_2F_Chnobond
-_audit_creation_date              2024-10-15
+_audit_creation_date              2024-10-16
 _audit_creation_method            'tobacco_3.0'
 _symmetry_space_group_name_H-M    'P1'
 _symmetry_Int_Tables_number       1

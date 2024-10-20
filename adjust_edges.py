@@ -49,7 +49,7 @@ def newno_fxnx(f_ex,nx,sc_unit_cell,no):
 	return new_no
 
 def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
-	#find closet x to adjust placed_edge pos
+	#find closed x to adjust placed_edge pos
 	adjusted_placed_edges = []
 	adjusted_placed_edges_extend = adjusted_placed_edges.extend
 	adjusted_placed_OXedges = []
@@ -104,19 +104,19 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	opairs_vec= [j for i in X_Opair for j in i[3]]
 	xs_vec = [i[1]  for i in X_Opair]
 	xos_vec = opairs_vec+xs_vec
-	cleaved_placed_nodes = []
-	cleaved_placed_nodes_append= cleaved_placed_nodes.append
-	for i in placed_nodes:
-		if re.sub('[0-9]','',i[5]) == 'X':
-			#if list(map(float,i[1:4])) not in xos_vec:
-				cleaved_placed_nodes_append(i)
+	#cleaved_placed_nodes = []
+	#cleaved_placed_nodes_append= cleaved_placed_nodes.append
+	#for i in placed_nodes:
+	#	if re.sub('[0-9]','',i[5]) == 'X':
+	#		if list(map(float,i[1:4])) not in xos_vec:####remove xoo from node_fc
+	#			cleaved_placed_nodes_append(i)
 
-		elif re.sub('[0-9]','',i[5]) == 'O':
-			#if list(map(float,i[1:4])) not in xos_vec:
-				cleaved_placed_nodes_append(i)
+	#	elif re.sub('[0-9]','',i[5]) == 'O':
+	#		if list(map(float,i[1:4])) not in xos_vec:####remove xoo from node_fc
+	#			cleaved_placed_nodes_append(i)
 
-		else:
-			cleaved_placed_nodes_append(i)
+	#	else:
+	#		cleaved_placed_nodes_append(i)
 
 
 	for edge in placed_edges:
@@ -176,10 +176,10 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 
 		evecs = np.asarray(evecs - ecom)
 		xvecs = np.asarray(xvecs - ecom)
-		relavent_node_xvecs = np.asarray(relevant_node_xvecs)
+		relevant_node_xvecs = np.asarray(relevant_node_xvecs)
 
 		trans = rnxcom
-		min_dist,rot,tran = superimpose(xvecs,relavent_node_xvecs)
+		min_dist,rot,tran = superimpose(xvecs,relevant_node_xvecs)
 		adjusted_evecs = np.dot(evecs,rot) + trans
 
 		adjusted_edge_in = np.column_stack((elems,adjusted_evecs,charges,cp,ty))
@@ -189,4 +189,5 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 		adjusted_placed_edges_extend(adjusted_edge_in)
 		adjusted_placed_OXedges_extend(adjusted_OXedge)
 
-	return adjusted_placed_edges,adjusted_placed_OXedges,cleaved_placed_nodes,X_Opair		
+	#return adjusted_placed_edges,adjusted_placed_OXedges,cleaved_placed_nodes,X_Opair		
+	return adjusted_placed_edges,adjusted_placed_OXedges,placed_nodes,X_Opair

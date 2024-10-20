@@ -163,8 +163,6 @@ def check_edge_center_inbox_loose(center,box_bound,scalar):
     
 
 
-
-
 def check_edgex_sits_inboundary(pointx1,pointx2,box_bound):
     a,b,c = box_bound
     pointx1 = pointx1.astype(float)
@@ -427,7 +425,7 @@ def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,sc
 def filt_boundary_res(s_fvec_all,row_diff_idx,box_bound):
     res_count_idx = set(s_fvec_all[:,-4])
     differ_res_idx = set([s_fvec_all[i][-4] for i in row_diff_idx])
-    print(f"differ res idx{differ_res_idx}")
+    #print(f"differ res idx{differ_res_idx}")
 
     inside_res=[]
     extra_res=[]
@@ -445,10 +443,10 @@ def filt_boundary_res(s_fvec_all,row_diff_idx,box_bound):
             moded_fvec = np.mod(original_fvec,box_bound)
             row_diff = diff_rows_count_two_array(original_fvec,moded_fvec)
             if res[0,4]=='EDGE' or res[0,4]=='TEDGE' and len(row_diff)>(res.shape[0]-3):
-                print(f"see EDGE{i}")
+                #print(f"see EDGE{i}")
                 #check if twoX sit on boundary with a tiny shift range
                 if not check_edgex_sits_inboundary(original_fvec[2],original_fvec[5],box_bound):
-                    print(f"kick{i}")
+                    #print(f"kick{i}")
                     #print(f"69 {len(row_diff)}len(row_diff){res.shape[0]}original_fvec{original_fvec}\n{moded_fvec}")
                     kick_res_append(i)  
             diff = [moded_fvec[i]-original_fvec[i] for i in row_diff]
@@ -492,8 +490,8 @@ def filt_boundary_res(s_fvec_all,row_diff_idx,box_bound):
 def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,cuty,cutz,boundary_scalar):
     res_count_idx = set(s_fvec_all[:,-4])
     differ_res_idx = set([s_fvec_all[i][-4] for i in row_diff_idx])
-    print(f"differ res idx{differ_res_idx}")
-    print(f"diff_ros{len(row_diff_idx)}, diff_res{len(differ_res_idx)}")
+    #print(f"differ res idx{differ_res_idx}")
+    #print(f"diff_ros{len(row_diff_idx)}, diff_res{len(differ_res_idx)}")
 
     inside_res=[]
     extra_res=[]
@@ -512,7 +510,7 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,
             moded_fvec = cut_boundary(original_fvec,box_bound,scalar,cutx,cuty,cutz)
             #print(f"original{original_fvec} moded{moded_fvec}")
             row_diff = diff_rows_count_two_array(original_fvec,moded_fvec)
-            print(f"row_diff{row_diff},original{original_fvec} moded{moded_fvec}")
+            #print(f"row_diff{row_diff},original{original_fvec} moded{moded_fvec}")
             #if (res[0,4]=='EDGE' or res[0,4]=='TEDGE') and len(row_diff)>(res.shape[0]-4):
             #    #check if twoX sit on boundary with a tiny shift range
             #    if not check_edgex_sits_inboundary(original_fvec[2],original_fvec[5],box_bound):
@@ -537,7 +535,7 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,
                     check1 = np.mean(x_atoms[:,-3:],axis=0) + np.asarray(diff_e) #edge_center
                     #check1=check1.astype(float)
                     #check1 = np.round(check1,1)
-                    print(i,diff_e,check1)
+                    #print(i,diff_e,check1)
                     if  check_edge_center_inbox_loose(check1,box_bound,boundary_scalar):
                         #print("in",i,diff_e)
                         #print(i,np.round(t_res_xyz[:6],5),np.round(np.mod(t_res_xyz[:6],[1,1,1]),5),diff_e)

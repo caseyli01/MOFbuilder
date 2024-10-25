@@ -439,7 +439,7 @@ def place_edges(evecs, edges_dir,charges, nnodes):
 		'''!!!'''
 		aff_all = np.dot(all_coords,rot) + ecoords
 		laff_all = np.c_[anf, aff_all, chg, all_inds, [bbind] * len(anf)]  
-		print(f"anf, aff_all, chg, all_inds, [bbind] * len(anf){anf, aff_all, chg, all_inds, [bbind] * len(anf)}")
+		#print(f"anf, aff_all, chg, all_inds, [bbind] * len(anf){anf, aff_all, chg, all_inds, [bbind] * len(anf)}")
 		placed_ebb_coords_extend(laff_all)
 		all_bonds_extend(abf)
 		ind_seg = ind_seg + len(all_names)

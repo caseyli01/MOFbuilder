@@ -3,6 +3,7 @@ from place_bbs import superimpose
 import networkx as nx
 from filtX import *
 import re
+from cluster import exposed_Xs_Os_boundary_node
 
 def termpdb(filename):
         inputfile = str(filename)
@@ -33,6 +34,13 @@ def termpdb(filename):
 
 
 
+
+def terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc_loose,sc_unit_cell,box_bound):
+    ex_node_cxo_cc_loose = exposed_Xs_Os_boundary_node(boundary_connected_nodes_res,connected_nodeedge_fc_loose,sc_unit_cell,box_bound)
+    terms_loose = add_terminations(term_file,ex_node_cxo_cc_loose)
+    terms_cc_loose = np.vstack((terms_loose))
+    return terms_cc_loose
+
 def Xpdb(data,X): 
         indices=[i for i in range(len(data)) if data[i,2][0] == X]
         X_term=data[indices]
@@ -55,7 +63,6 @@ def add_terminations(term_file,ex_node_cxo_cc):
     node_oovecs_record_append = node_oovecs_record.append
 
     term_data=termpdb(term_file)
-    print(term_data[0])
     term_info = term_data[:,:-3]
     term_coords = term_data[:,-3:]
     xterm,_=Xpdb(term_data,'X')
@@ -147,7 +154,7 @@ def add_node_terminations(term_file,ex_node_cxo_cc):
         indices = [index for index, value in enumerate(node_oovecs_record) if is_list_A_in_B(node_xoo_vecs,value[0])]
         if len(indices)==1: 
             #find index of node_oo_vecs in record 
-            print(f"found one,{indices}")
+            #print(f"found one,{indices}")
             rot = node_oovecs_record[indices[0]][1]
         else:
             #print(term_xoovecs,node_xoo_vecs)
@@ -213,13 +220,13 @@ def add_edge_termination(e_termfile,ex_edge_x):
         atom = e_term[k]
         if atom[2] =='X':
             e_term_X_ind = k
-            print(f'e_term_X_ind: {e_term_X_ind}')
+            #print(f'e_term_X_ind: {e_term_X_ind}')
         elif atom[2] == 'x':
             e_term_x_ind = k
-            print(f'e_term_x_ind: {e_term_x_ind}')
+            #print(f'e_term_x_ind: {e_term_x_ind}')
         else:
             e_term_other_ind.append(k)
-    print(f'e_term_other_ind{e_term_other_ind}')
+    #print(f'e_term_other_ind{e_term_other_ind}')
     e_term_other_ind.append(e_term_X_ind)
     e_term_x_cc= e_term[e_term_x_ind][-3:]
     e_term_X_cc= e_term[e_term_X_ind][-3:]
@@ -280,27 +287,30 @@ def add_edge_termination(e_termfile,ex_edge_x):
 def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics):
     ex_edge_x = exposed_x_mainfrag_edge(unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
     unsaturated_edges_idx = [int(ue[0][1:]) for ue in unsaturated_main_frag_edges]
-    edge_terms_cc = add_edge_termination(e_termfile,ex_edge_x)
-    edge_term_dict = {}
-    edge_term_cc_arr = np.vstack(edge_terms_cc)
-    for idx in unsaturated_edges_idx:
-        idx_term_arr = edge_term_cc_arr[edge_term_cc_arr[:,5]==str(idx)]
-        edge_term_dict[idx] = idx_term_arr
+    if len(unsaturated_edges_idx) > 0:
+        edge_terms_cc = add_edge_termination(e_termfile,ex_edge_x)
+        edge_term_dict = {}
+        edge_term_cc_arr = np.vstack(edge_terms_cc)
+        for idx in unsaturated_edges_idx:
+            idx_term_arr = edge_term_cc_arr[edge_term_cc_arr[:,5]==str(idx)]
+            edge_term_dict[idx] = idx_term_arr
 
-    sa_edges=main_frag_edges_cc[~np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
-    usa_edges = main_frag_edges_cc[np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
+        sa_edges=main_frag_edges_cc[~np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
+        usa_edges = main_frag_edges_cc[np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
 
-    t_usa_edges = []
-    for i_exedge in unsaturated_edges_idx:
-            exedge=usa_edges[usa_edges[:,5]==i_exedge]
-            t_edge_lines = edge_term_dict[i_exedge]
-            #print(i_exedge,len(t_edge_lines))
-            t_usa_edge=np.vstack((exedge,t_edge_lines))
-            t_usa_edge[:,5]=int(i_exedge)
-            t_usa_edge[:,4]='HEDGE'
-            for row_n in range(len(t_usa_edge)):
-                t_usa_edge[row_n,2] = re.sub('[0-9]','',t_usa_edge[row_n,2])+str(row_n+1)
-            t_usa_edges.append(t_usa_edge)
-    t_usa_edges_arr = np.vstack(t_usa_edges)
-    t_edges=np.vstack((sa_edges,t_usa_edges_arr))
-    return t_edges
+        t_usa_edges = []
+        for i_exedge in unsaturated_edges_idx:
+                exedge=usa_edges[usa_edges[:,5]==i_exedge]
+                t_edge_lines = edge_term_dict[i_exedge]
+                #print(i_exedge,len(t_edge_lines))
+                t_usa_edge=np.vstack((exedge,t_edge_lines))
+                t_usa_edge[:,5]=int(i_exedge)
+                t_usa_edge[:,4]='HEDGE'
+                for row_n in range(len(t_usa_edge)):
+                    t_usa_edge[row_n,2] = re.sub('[0-9]','',t_usa_edge[row_n,2])+str(row_n+1)
+                t_usa_edges.append(t_usa_edge)
+        t_usa_edges_arr = np.vstack(t_usa_edges)
+        t_edges=np.vstack((sa_edges,t_usa_edges_arr))
+        return t_edges
+    else:
+        return main_frag_edges_cc

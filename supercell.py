@@ -43,6 +43,26 @@ def cleave_supercell_boundary(supercell, supercell_boundary):
     #print(f"cleaved supercell(not in latter but in former) {len(supercell_inside_list)}")
     return np.array(supercell_inside_list)
 
+
+def find_new_node_beginning(arr):
+    '''this function is to make one node as the beginnin for the whole MOF cluster'''
+    #find min x,y,z see if [x,y,z] in
+    #if not in then find minx then find miny then find minz 
+    min_xyz=np.min(arr,axis=0)
+    if any(np.array_equal(row, min_xyz) for row in arr):
+        return min_xyz
+    else:
+        min_x = np.min(arr[:,0])
+        min_x_rows = arr[arr[:,0]==min_x]
+        min_xyz = np.min(min_x_rows,axis=0)
+        if  any(np.array_equal(row, min_xyz) for row in arr):
+            return min_xyz
+        else:
+            min_y = np.min(min_x_rows[:,1])
+            min_xy_rows = min_x_rows[min_x_rows[:,1]==min_y]
+            min_xyz = np.min(min_xy_rows,axis=0)
+            return min_xyz
+
 class Frame():
     def __init__(self,supercell_xyz,unit_cell):
          self.supercell_xyz = supercell_xyz
@@ -101,4 +121,5 @@ class Frame():
         self.layer_out_supercell_y_ = tric_points(layer_out_Carte_y_,self.unit_cell)
         self.layer_out_supercell_z  = tric_points(layer_out_Carte_z ,self.unit_cell)
         self.layer_out_supercell_z_ = tric_points(layer_out_Carte_z_,self.unit_cell)
+
 

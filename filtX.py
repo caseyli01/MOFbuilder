@@ -1,4 +1,5 @@
 import numpy as np
+import re
 
 def filt_nodex_fvec(array):
     nodex_fvec=np.asarray([i for i in array if i[4]=='NODE' and re.sub('[0-9]','',i[2]) == 'X'])
@@ -21,9 +22,14 @@ def filt_outside_edgex(Xs_fc,edge_center_fc,linker_topics):
         lcs_list.append((i,lc))
         lcs.append(lc)
     lcs.sort(reverse=True)
-    outside_edgex_indices=[i[0] for i in lcs_list if i[1]>lcs[linker_topics]]
-    outside_edgex_ind_dist=[i for i in lcs_list if i[1]>lcs[linker_topics]]
-    return outside_edgex_indices,outside_edgex_ind_dist
+    if len(lcs)>linker_topics:
+        outside_edgex_indices=[i[0] for i in lcs_list if i[1]>lcs[linker_topics]]
+        outside_edgex_ind_dist=[i for i in lcs_list if i[1]>lcs[linker_topics]]
+        return outside_edgex_indices,outside_edgex_ind_dist
+    else:
+        outside_edgex_indices=[i[0] for i in lcs_list ]
+        outside_edgex_ind_dist=[i for i in lcs_list ]
+        return outside_edgex_indices,outside_edgex_ind_dist
 
 
 def filt_close_edgex(Xs_fc,edge_center_fc,linker_topics):

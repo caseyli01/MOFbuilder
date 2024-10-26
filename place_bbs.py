@@ -169,7 +169,7 @@ def scaled_node_and_edge_vectors(sc_coords, sc_omega_plus, sc_unit_cell, ea_dict
 
 	return nvecs, evecs,node_placed_edges
 
-def place_nodes(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
+def place_nodes_ditopic(nvecs, nodes_dir):
 
 	placed_nbb_coords = []
 	placed_nbb_coords_extend = placed_nbb_coords.extend
@@ -182,7 +182,6 @@ def place_nodes(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 		bbind = bbind + 1
 		name,cvec,cif,nvec = n
 		#ll = 0
-		#
 		#for v in nvec:
 		#	mag = np.linalg.norm(v - np.average(nvec, axis = 0))
 		#	if mag > ll:
@@ -234,7 +233,9 @@ def place_nodes(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 	return placed_nbb_coords, all_bonds
 
 
-def place_nodes_tetra(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
+
+
+def place_nodes_tetra(nvecs, nodes_dir):
 
 	placed_nbb_coords = []
 	placed_nbb_coords_extend = placed_nbb_coords.extend
@@ -244,27 +245,16 @@ def place_nodes_tetra(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 	frame_nbb_coords_extend = frame_nbb_coords.extend
 	all_bonds = []
 	all_bonds_extend = all_bonds.extend
-	porphyrin_node_name=[]
-	porphyrin_node_name_append= porphyrin_node_name.append
+	tetra_node_name=[]
+	tetra_node_name_append= tetra_node_name.append
 	ind_seg = 0
 	bbind = 1
 
 	for n in nvecs:
 		bbind = bbind + 1
 		name,cvec,cif,nvec = n
-		#ll = 0
-		#
-		#for v in nvec:
-		#	mag = np.linalg.norm(v - np.average(nvec, axis = 0))
-		#	if mag > ll:
-		#		ll = mag
-
 		bbxvec = np.array(X_vecs(cif,nodes_dir,False))
-		#if ORIENTATION_DEPENDENT_NODES:
 		nbbxvec = bbxvec
-		#else:
-		#	nbbxvec = np.array([ll*(v / np.linalg.norm(v)) for v in bbxvec])
-
 		min_dist,rot,tran = superimpose(nbbxvec,nvec)
 
 		all_bb = bb2array(cif, nodes_dir)
@@ -272,7 +262,6 @@ def place_nodes_tetra(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 		all_inds = np.array([v[0] for v in all_bb])
 		chg, elem = bbcharges(cif, nodes_dir)
 		all_names = [o + re.sub('[A-Za-z]','',p) for o,p in zip(elem,all_inds)]
-		#print(f'all_name{all_names}')
 
 		all_names_indices = np.array([int(re.sub('[A-Za-z]','',e)) for e in all_names]) + ind_seg
 
@@ -297,20 +286,23 @@ def place_nodes_tetra(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 		aff_all = np.dot(all_coords,rot) + cvec
 		
 		laff_all = np.c_[anf, aff_all, chg, all_inds, [bbind] * len(anf)]
-		if "porphyrin" in cif:
+		if "tetracenter" in cif:
 			placed_edge_center_coords_extend(laff_all)
 			placed_nbb_coords_extend(laff_all)
-			porphyrin_node_name_append(name)
+			tetra_node_name_append(name)
 		else:
 			frame_nbb_coords_extend(laff_all)
 			placed_nbb_coords_extend(laff_all)
 		all_bonds_extend(abf)
 		ind_seg = ind_seg + len(all_names)
 
-	return placed_nbb_coords, placed_edge_center_coords,frame_nbb_coords,porphyrin_node_name,all_bonds
+	return placed_nbb_coords, placed_edge_center_coords,frame_nbb_coords,tetra_node_name,all_bonds
 
 
-def place_nodes_tri(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
+
+
+
+def place_nodes_tri(nvecs, nodes_dir):
 
 	placed_nbb_coords = []
 	placed_nbb_coords_extend = placed_nbb_coords.extend
@@ -387,7 +379,7 @@ def place_nodes_tri(nvecs, nodes_dir,charges, ORIENTATION_DEPENDENT_NODES):
 
 
 
-def place_edges(evecs, edges_dir,charges, nnodes):
+def place_edges(evecs, edges_dir,CHARGES,nnodes):
 
 	placed_ebb_coords = []
 	placed_ebb_coords_extend = placed_ebb_coords.extend

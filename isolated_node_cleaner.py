@@ -2,6 +2,9 @@ import numpy as np
 import networkx as nx
 import re
 
+
+
+
 def reindex_frag_array(all_array,fragmentname):
     # according to atoms number in one residue(like a node has 66 atoms) to reassign res_number to residue for next call
     frag_array = all_array[all_array[:,4]== fragmentname] # fragmentname can be "EDGE" or "NODE"
@@ -57,7 +60,44 @@ def calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics):
 
         if re.sub('[0-9]','',e_eG_node): #if this node is a edge(_center) node in eG graph
             for i in n_candidates:
-                if i[0] < le_list[linker_topics] and i[0]< 1.3*le_list[0]:
+                if i[0] == le_list[0]:
+                    eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
+                    eG.add_edge(e_eG_node,i[1][0])
+                elif (i[0] <= le_list[linker_topics-1]) & (i[0]< 1.3*le_list[0]) :
+                    #print(i[0],le_list[:4],1.3*le_list[0])
+                    eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
+                    eG.add_edge(e_eG_node,i[1][0])
+    return eG
+
+
+def calculate_eG_net_ditopic(edgefc_centers,nodefc_centers,linker_topics):
+    #calculate and add all edge_center as node to eG, then search for node_center in a range(around closest node distance)
+    #this eG is searching neighbor nodes from edge, so the absolute isolated nodes (just single node) cannot be counted because it cannot be found from an edge 
+    eG=nx.Graph()
+    for i in edgefc_centers:
+        eG.add_nodes_from([('E'+str(i[0]), {'fc': i[1],'Odist': i[2]})])
+
+    for e_eG_index in range(len(edgefc_centers)):
+        e_eG_node = list(eG.nodes)[e_eG_index]
+        e_fc = eG.nodes[e_eG_node]['fc']
+        e_dist = eG.nodes[e_eG_node]['Odist']
+
+        n_candidates = [] #seach neighbor node candidates in a +-0.5 shell range of this edge center 
+        for j in nodefc_centers:
+            if j[2]>e_dist-0.5 and j[2]< e_dist+0.5:
+                    le=np.linalg.norm(j[1] - e_fc)
+                    if le < 0.5: #for ditopic edge center to neighbor node
+                        n_candidates.append((le,j,e_fc))
+
+        le_list = [i[0] for i in n_candidates]
+        le_list.sort()
+
+        if re.sub('[0-9]','',e_eG_node): #if this node is not an edge(_center) node in eG graph
+            for i in n_candidates:
+                if i[0] == le_list[0]:
+                    eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
+                    eG.add_edge(e_eG_node,i[1][0])
+                elif (i[0] <= le_list[linker_topics-1]) & (i[0]< 1.3*le_list[0]) :
                     #print(i[0],le_list[:4],1.3*le_list[0])
                     eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
                     eG.add_edge(e_eG_node,i[1][0])

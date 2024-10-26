@@ -65,7 +65,7 @@ from bbcif_properties import cncalc, bbelems
 from SBU_geometry import SBU_coords
 from scale import scale
 from scaled_embedding2coords import omega2coords
-from place_bbs import scaled_node_and_edge_vectors,place_edges,place_nodes_ditopic
+from place_bbs import scaled_node_and_edge_vectors, place_nodes_tetra, place_edges,place_nodes_tetra
 from remove_net_charge import fix_charges
 from remove_dummy_atoms import remove_Fr
 from adjust_edges import *
@@ -84,17 +84,16 @@ from replace import *
 
 
 
-class MOF_ditopic:
+class MOF_tetra:
 	def __init__(self,templates_dir,nodes_dir,edges_dir,template,node_topics):
 		self.templates_dir = templates_dir
 		self.nodes_dir = nodes_dir
 		self.edges_dir = edges_dir
 		self.template = template
-		self.linker_topics = 2 #ditopic class 
+		self.linker_topics = 4 #tetratopic class 
 		self.node_topics = node_topics
 	
 	def load(self,WRITE_CIF):
-
 		templates_dir = self.templates_dir 
 		nodes_dir = self.nodes_dir 
 		edges_dir = self.edges_dir 
@@ -109,16 +108,12 @@ class MOF_ditopic:
 
 		cat_count = 0
 		for net in ct2g(template,templates_dir):
-
 				cat_count += 1
 				TG, start, unit_cell, TVT, TET, TNAME, a, b, c, ang_alpha, ang_beta, ang_gamma, max_le, catenation = net
-
 				TVT = sorted(TVT, key=lambda x:x[0], reverse=True) # sort node with connected degree, the first one is the highest(full)-coordinated node
 				TET = sorted(TET, reverse=True) #sort node_pair by the node_index
 				#get node cif information from node dir
-				
 				node_cns = [(cncalc(node, nodes_dir), node) for node in os.listdir(nodes_dir)]
-
 				print('Number of vertices = ', len(TG.nodes()))
 				print('Number of edges = ', len(TG.edges()))
 				print()
@@ -126,13 +121,12 @@ class MOF_ditopic:
 				edge_counts = dict((data['type'],0) for e0,e1,data in TG.edges(data=True))
 				for e0,e1,data in TG.edges(data=True):
 					edge_counts[data['type']] += 1
-				
+
 				if PRINT:
-			
 					print('There are', len(TG.nodes()), 'vertices in the voltage graph:')
 					print()
 					v = 0
-			
+					
 					for node in TG.nodes():
 						v += 1
 						print(v,':',node)
@@ -142,10 +136,9 @@ class MOF_ditopic:
 						print('fractional coords : ', node_dict['fcoords'])
 						#print('degree : ', node_dict['cn'][0])
 						print()
-			
 					print('There are', len(TG.edges()), 'edges in the voltage graph:')
 					print()
-			
+
 					for edge in TG.edges(data=True,keys=True):
 						edge_dict = edge[3]
 						ind = edge[2]
@@ -157,7 +150,7 @@ class MOF_ditopic:
 						print('cartesian coords : ',edge_dict['ccoords'])
 						print('fractional coords : ',edge_dict['fcoords'])
 						print()
-			
+
 				vas = vertex_assign(nodes_dir,TG, TVT, node_cns, unit_cell, USER_SPECIFIED_NODE_ASSIGNMENT, SYMMETRY_TOL, ALL_NODE_COMBINATIONS)
 				CB,CO = cycle_cocyle(TG)
 
@@ -167,7 +160,7 @@ class MOF_ditopic:
 						print('Moving to the next template...')
 						print()
 						continue
-			
+					
 				if len(CB) != (len(TG.edges()) - len(TG.nodes()) + 1):
 					print('The cycle basis is incorrect.')
 					print('The number of cycles in the cycle basis does not equal the rank of the cycle space.')
@@ -186,9 +179,9 @@ class MOF_ditopic:
 					for i in alpha:
 						print(i)
 					print()
-			
+
 				num_vertices = len(TG.nodes())
-			
+
 				if COMBINATORIAL_EDGE_ASSIGNMENT:
 					eas = list(itertools.product([e for e in os.listdir('edges')], repeat = len(TET)))
 				else:
@@ -201,7 +194,7 @@ class MOF_ditopic:
 						if i == len(edge_files):
 							i = 0
 					eas = [eas]
-			
+
 				g = 0
 
 				for va in vas:
@@ -213,7 +206,7 @@ class MOF_ditopic:
 					v_set0 = [('v' + str(vname_dict[re.sub('[0-9]','',i[0])]), i[1]) for i in va]
 					v_set1 = sorted(list(set(v_set0)), key=lambda x: x[0])
 					v_set = [v[0] + '-' + v[1] for v in v_set1]
-			
+
 					print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 					print('vertex assignment : ',v_set)
 					print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
@@ -223,7 +216,7 @@ class MOF_ditopic:
 						print(v_set, 'contains no metals or multiple metal elements, no cif will be written')
 						print()
 						continue
-
+					
 					if MOFS_ONLY and len(metals) < 1:
 						print(v_set, 'contains no metals, no cif will be written')
 						print()
@@ -234,20 +227,20 @@ class MOF_ditopic:
 						for n in TG.nodes(data=True):
 							if v[0] == n[0]:
 								n[1]['cifname'] = v[1]
-					
+
 					for ea in eas:
-			
+					
 						g += 1
-			
+
 						print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 						print('edge assignment : ',ea)
 						print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 						print()
-						
+
 						type_assign = dict((k,[]) for k in sorted(TET, reverse=True))
 						for k,m in zip(TET,ea):
 							type_assign[k] = m
-						
+
 						# add cifname to TG.edge
 						for e in TG.edges(data=True):
 							ty = e[2]['type']
@@ -267,7 +260,7 @@ class MOF_ditopic:
 						ea_dict = assign_node_vecs2edges(nodes_dir,TG, unit_cell, SYMMETRY_TOL, template)
 						all_SBU_coords = SBU_coords(TG, ea_dict, CONNECTION_SITE_BOND_LENGTH)
 						sc_a, sc_b, sc_c, sc_alpha, sc_beta, sc_gamma, sc_covar, Bstar_inv, max_length, callbackresults, ncra, ncca, scaling_data = scale(all_SBU_coords,a,b,c,ang_alpha,ang_beta,ang_gamma,max_le,num_vertices,Bstar,alpha,num_edges,FIX_UC,SCALING_ITERATIONS,PRE_SCALE,MIN_CELL_LENGTH,OPT_METHOD)
-				
+
 						print('*******************************************')
 						print('The scaled unit cell parameters are : ')
 						print('*******************************************')
@@ -278,7 +271,7 @@ class MOF_ditopic:
 						print('beta :', np.round(sc_beta, 5))
 						print('gamma:', np.round(sc_gamma, 5))
 						print()
-			
+
 						for sc, name in zip((sc_a, sc_b, sc_c), ('a', 'b', 'c')):
 							cflag = False
 							if sc == MIN_CELL_LENGTH:
@@ -286,15 +279,15 @@ class MOF_ditopic:
 								print('try re-running with', name, 'fixed or a larger MIN_CELL_LENGTH')
 								print('no cif will be written')
 								cflag = True
-			
+
 						if cflag:
 							continue
-			
+						
 						scaled_params = [sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma]
-					
+
 						sc_Alpha = np.r_[alpha[0:num_edges-num_vertices+1,:], sc_covar]
 						sc_omega_plus = np.dot(Bstar_inv, sc_Alpha)
-					
+
 						ax = sc_a
 						ay = 0.0
 						az = 0.0
@@ -305,70 +298,27 @@ class MOF_ditopic:
 						cy = (sc_c * sc_b * np.cos(sc_alpha * pi/180.0) - bx * cx) / by
 						cz = (sc_c ** 2.0 - cx ** 2.0 - cy ** 2.0) ** 0.5
 						sc_unit_cell = np.asarray([[ax,ay,az],[bx,by,bz],[cx,cy,cz]]).T
-						
+
 						scaled_coords = omega2coords(start, TG, sc_omega_plus, (sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma), num_vertices,templates_dir, template, g, WRITE_CHECK_FILES)
 						nvecs,evecs,node_placed_edges = scaled_node_and_edge_vectors(scaled_coords, sc_omega_plus, sc_unit_cell, ea_dict)
-						placed_nodes, node_bonds = place_nodes_ditopic(nvecs, nodes_dir)
-						placed_edges, edge_bonds = place_edges(evecs, edges_dir,CHARGES,len(placed_nodes))
 
+						placed_nodes, tetra_node, frame_nbb_node,tetra_node_name,node_bonds = place_nodes_tetra(nvecs, nodes_dir)
+						placed_edges, edge_bonds = place_edges(evecs, edges_dir,CHARGES, len(placed_nodes))
+						placed_edges = adjust_edges(placed_edges, placed_nodes, sc_unit_cell)
 
-						placed_edges= adjust_edges(placed_edges, placed_nodes, sc_unit_cell)
-						
-						# add classifination 
-	
 						# add classifination 
 						placed_nodes = np.c_[placed_nodes, np.full((len(placed_nodes),1),'NODE')]
 						placed_edges = np.c_[placed_edges, np.full((len(placed_edges),1),'EDGE')]
 
 						placed_all = list(placed_nodes) + list(placed_edges)
 						bonds_all = node_bonds + edge_bonds
-						
-				
-						##if WRITE_CHECK_FILES:
-						##	write_check_cif(template, placed_nodes, placed_edges, g, scaled_params, sc_unit_cell)
-					
+
+						#if WRITE_CHECK_FILES:
+						#	write_check_cif(template, placed_nodes, placed_edges, g, scaled_params, sc_unit_cell)
+
 						if REMOVE_DUMMY_ATOMS:
 							placed_all, bonds_all, nconnections = remove_Fr(placed_all,bonds_all)
-						
-						##print('computing X-X bonds...')
-						##print()
-						##print('*******************************************')
-						##print('Bond formation : ')
-						##print('*******************************************')
-						##
-						###fixed_bonds, nbcount, bond_check_passed = bond_connected_components(placed_all, bonds_all, sc_unit_cell, max_length, BOND_TOL, nconnections, num_possible_XX_bonds)
-						#print('there were ', nbcount, ' X-X bonds formed')
-						##bond_check_passed =False
-						##if bond_check_passed:
-						##	print('bond check passed')
-						##	bond_check_code = ''
-						##else:
-						##	print('bond check failed, attempting distance search bonding...')
-						##	fixed_bonds, nbcount = distance_search_bond(placed_all, bonds_all, sc_unit_cell, 2.5)
-						##	bond_check_code = '_BOND_CHECK_FAILED'
-						##	print('there were', nbcount, 'X-X bonds formed')
-						##print()
-				
-						##if CHARGES:
-						##	fc_placed_all, netcharge, onetcharge, rcb = fix_charges(placed_all)
-						##else:
-						##	fc_placed_all = placed_all
-					##
-						##fc_placed_all = placed_all
-						##fixed_bonds = fix_bond_sym(fixed_bonds, placed_all, sc_unit_cell)
-			##
-						##if CHARGES:
-						##	print('*******************************************')
-						##	print('Charge information :                       ')
-						##	print('*******************************************')
-						##	print('old net charge                  :', np.round(onetcharge, 5))
-						##	print('rescaling magnitude             :', np.round(rcb, 5))
-					##
-						##	remove_net = choice(range(len(fc_placed_all)))
-						##	fc_placed_all[remove_net][4] -= np.round(netcharge, 4)
-					##
-						##	print('new net charge (after rescaling):', np.sum([li[4] for li in fc_placed_all]))
-						##	print()
+
 
 						vnames = '_'.join([v.split('.')[0] for v in v_set])
 						enames_list = [e[0:-4] for e in ea]
@@ -377,18 +327,11 @@ class MOF_ditopic:
 						enames_flat = [str(L) + '-' + '_'.join(names) for L,names in enames_grouped]
 						enames = '_'.join(enames_flat)
 						bond_check_code = 'nobond'
-
 						if catenation:
 							outcifname = template[0:-4] + '_' +  vnames + '_' + enames + bond_check_code + '_' + 'CAT' + str(cat_count) + '.cif'
 						else:
 							outcifname = template[0:-4] + '_' +  vnames + '_' + enames + bond_check_code + '.cif'
-				
-						##if WRITE_CIF:
-						##	print('writing cif...')
-						##	print()
-						##	if len(cifname) > 255:
-						##		cifname = cifname[0:241]+'_truncated.cif'
-						##	write_cif(fc_placed_all, fixed_bonds, scaled_params, sc_unit_cell, outcifname, CHARGES, wrap_coords=False)
+
 						if WRITE_CIF:
 							print('writing cif...')
 							print()
@@ -397,21 +340,19 @@ class MOF_ditopic:
 							write_cif_nobond(placed_all, scaled_params, sc_unit_cell, outcifname, CHARGES, wrap_coords=False)
 
 		if catenation and MERGE_CATENATED_NETS:
-			
+
 			print('merging catenated cifs...')
 			cat_cifs = glob.glob('output_cifs/*_CAT*.cif')
 
 			for comb in itertools.combinations(cat_cifs, cat_count):
-
 				builds = [name[0:-9] for name in comb]
-
 				print(set(builds))
 
 				if len(set(builds)) == 1:
 					pass
 				else:
 					continue
-
+				
 				merge_catenated_cifs(comb, CHARGES)
 
 			for cif in cat_cifs:
@@ -420,20 +361,22 @@ class MOF_ditopic:
 		self.TG = TG
 		self.placed_all = placed_all
 		self.sc_unit_cell = sc_unit_cell
+		self.tetra_node_name = tetra_node_name
 		self.placed_nodes = placed_nodes
 		self.placed_edges = placed_edges
+		self.frame_nbb_node = frame_nbb_node
 
 	def basic_supercell(self,supercell,term_file = 'methyl.pdb',scalar = 0.00,boundary_scalar = 0.0,cutxyz=[True,True,True]):
 		linker_topics = self.linker_topics
 		cutx,cuty,cutz = cutxyz
 		TG = self.TG
 
-
+		tetra_node_name = self.tetra_node_name
 		placed_edges = self.placed_edges
 		placed_nodes = self.placed_nodes
 		sc_unit_cell = self.sc_unit_cell
-		
-		frame_node_name= list(TG.nodes())
+		frame_nbb_node = self.frame_nbb_node		
+		frame_node_name=[i for i in list(TG.nodes()) if i not in tetra_node_name]
 		frame_node_fc=np.asarray([TG.nodes[fn]['fcoords']for fn in frame_node_name])
     
 		new_beginning_fc = find_new_node_beginning(frame_node_fc)		
@@ -441,8 +384,11 @@ class MOF_ditopic:
 		placed_edges_arr,edges_id=placed_arr(placed_edges)		
 		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],np.dot(placed_nodes_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_nodes_arr[:,4:]))
 		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],np.dot(placed_edges_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_edges_arr[:,4:]))		
-			
-		target_all_fc = np.vstack((placed_nodes_fc,placed_edges_fc))
+		frame_node_ccoords= np.c_[frame_nbb_node,['NODE']*len(frame_nbb_node)]
+		placed_frame_node,_ = placed_arr(frame_node_ccoords)
+		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],np.dot(placed_frame_node[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_frame_node[:,4:]))		
+		tetratopic_edges_fcoords = merge_multitopic_node_edge_fc(TG,tetra_node_name,placed_nodes_fc,placed_edges_fc)		
+		target_all_fc = np.vstack((placed_frame_node_fc,tetratopic_edges_fcoords))
         #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason for use above version node is because we need xoo in node for terminations adding
 		box_bound= supercell+1
 		supercell_Carte = Carte_points_generator(supercell)		
@@ -459,10 +405,10 @@ class MOF_ditopic:
 		self.bare_nodeedge_fc = bare_nodeedge_fc_loose
 		
 	def write_basic_supercell(self,gro,xyz):
-		tempgro('20test.gro',self.all_connected_node_edge_cc[self.all_connected_node_edge_cc[:,5]==1])
+		tempgro('40test.gro',self.all_connected_node_edge_cc[self.all_connected_node_edge_cc[:,5]==1])
 		tempgro(gro,self.all_N_E_T_cc)
 		temp_xyz(xyz,self.all_N_E_T_cc)
-		viewgro("20test.gro")
+		viewgro("40test.gro")
 		viewgro(gro)
 	
 	
@@ -506,7 +452,7 @@ class MOF_ditopic:
 		edgefc_centers = get_frag_centers_fc(reedge_fcarr)
 		nodefc_centers = get_frag_centers_fc(renode_fcarr)
 
-		eG = calculate_eG_net_ditopic(edgefc_centers,nodefc_centers,linker_topics)
+		eG = calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics)
 		eG_subparts=[len(c) for c in sorted(nx.connected_components(eG), key=len, reverse=True)]
 
 		if len(eG_subparts)>1:

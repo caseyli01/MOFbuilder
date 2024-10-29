@@ -242,9 +242,6 @@ def bbcharges(cifname, direc):
 def calc_edge_len(cifname, direc):
 
 	path = os.path.join(direc, cifname)
-	print("path")
-	print(path)
-	print("path")
 
 	with open(path, 'r') as cif:
 		cif = cif.read()

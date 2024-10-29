@@ -331,7 +331,7 @@ def xoo_pair_ind_node(main_frag_nodes_fc,node_id,sc_unit_cell):
     return xoo_ind_node
 
 
-def replace_XbyC(single_edge):
+def replace_Xbyx(single_edge):
     for i in range(len(single_edge)):
         if single_edge[i,2][0]=='X':
             single_edge[i,2] = re.sub('X','x',single_edge[i,2])
@@ -353,7 +353,7 @@ def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_
         #degree_of_edge=nx.degree(eG,i)
         neighbor_nodes = list(nx.neighbors(eG,i))
         single_edge = main_frag_edges_fc[main_frag_edges_fc[:,5]==int(i[1:])]
-        single_edge = replace_XbyC(single_edge)
+        single_edge = replace_Xbyx(single_edge)
         #print(i,neighbor_nodes,eG.nodes[i]['fc'])
         c_edge=eG.nodes[i]
         c_edge_fc = c_edge['fc']

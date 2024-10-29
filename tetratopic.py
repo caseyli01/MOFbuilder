@@ -447,8 +447,10 @@ class MOF_tetra:
 		reedge1_fcarr=reindex_frag_array(bare_nodeedge_fc_loose,'EDGE')
 		defective_node_fcarr = np.vstack(([i for i in renode1_fcarr if i[5] not in remove_node_list]))
 		defective_edge_fcarr = np.vstack(([i for i in reedge1_fcarr if i[5] not in remove_edge_list]))
-		renode_fcarr = reindex_frag_array(defective_node_fcarr,'NODE')
-		reedge_fcarr = reindex_frag_array(defective_edge_fcarr,'EDGE')
+		#renode_fcarr = reindex_frag_array(defective_node_fcarr,'NODE')
+		#reedge_fcarr = reindex_frag_array(defective_edge_fcarr,'EDGE')
+		renode_fcarr = defective_node_fcarr
+		reedge_fcarr = defective_edge_fcarr
 		edgefc_centers = get_frag_centers_fc(reedge_fcarr)
 		nodefc_centers = get_frag_centers_fc(renode_fcarr)
 
@@ -559,6 +561,8 @@ class MOF_tetra:
 			subX_coords_cc = subX_coords_cc.astype('float')
 			X_atoms_coords_cc = X_atoms[:,-3:]
 			X_atoms_coords_cc =  X_atoms_coords_cc.astype('float')
+			self.subX_coords_cc = subX
+			self.X_atoms_coords_cc = X_atoms
 
 			_,rot,trans = superimpose(subX_coords_cc,X_atoms_coords_cc)
 			sub_coords = sub_data[:,-3:]

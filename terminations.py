@@ -4,6 +4,7 @@ import networkx as nx
 from filtX import *
 import re
 from cluster import exposed_Xs_Os_boundary_node
+from adjust_edges import replace_Xbyx
 
 def termpdb(filename):
         inputfile = str(filename)
@@ -280,7 +281,7 @@ def add_edge_termination(e_termfile,ex_edge_x):
 
         edge_terms.append(edge_term)
 
-    return edge_terms
+    return edge_terms,len(e_term_other_ind)
 
 
 
@@ -288,7 +289,7 @@ def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_f
     ex_edge_x = exposed_x_mainfrag_edge(unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
     unsaturated_edges_idx = [int(ue[0][1:]) for ue in unsaturated_main_frag_edges]
     if len(unsaturated_edges_idx) > 0:
-        edge_terms_cc = add_edge_termination(e_termfile,ex_edge_x)
+        edge_terms_cc,e_term_atom_num = add_edge_termination(e_termfile,ex_edge_x)
         edge_term_dict = {}
         edge_term_cc_arr = np.vstack(edge_terms_cc)
         for idx in unsaturated_edges_idx:
@@ -302,10 +303,16 @@ def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_f
         for i_exedge in unsaturated_edges_idx:
                 exedge=usa_edges[usa_edges[:,5]==i_exedge]
                 t_edge_lines = edge_term_dict[i_exedge]
-                #print(i_exedge,len(t_edge_lines))
+                print(i_exedge,len(t_edge_lines))
+                #t_edge_lines = replace_Xbyx(t_edge_lines)
                 t_usa_edge=np.vstack((exedge,t_edge_lines))
                 t_usa_edge[:,5]=int(i_exedge)
-                t_usa_edge[:,4]='HEDGE'
+                if int(len(t_edge_lines)/e_term_atom_num)==1:
+                    t_usa_edge[:,4]='HEDGE'
+                elif int(len(t_edge_lines)/e_term_atom_num)==2:
+                    t_usa_edge[:,4]='HHEDGE'
+                elif int(len(t_edge_lines)/e_term_atom_num)==3:
+                    t_usa_edge[:,4]='HHHEDGE'
                 for row_n in range(len(t_usa_edge)):
                     t_usa_edge[row_n,2] = re.sub('[0-9]','',t_usa_edge[row_n,2])+str(row_n+1)
                 t_usa_edges.append(t_usa_edge)

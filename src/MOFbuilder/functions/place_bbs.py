@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.linalg import norm
-from Bio.SVDSuperimposer import SVDSuperimposer
+#from Bio.SVDSuperimposer import SVDSuperimposer
+from _Bio import SVDSuperimposer
 from bbcif_properties import bb2array, X_vecs, bbbonds, bbcharges
 
 

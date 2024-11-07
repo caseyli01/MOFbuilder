@@ -117,7 +117,7 @@ class MOF_ditopic:
 				TVT = sorted(TVT, key=lambda x:x[0], reverse=True) # sort node with connected degree, the first one is the highest(full)-coordinated node
 				TET = sorted(TET, reverse=True) #sort node_pair by the node_index
 				#get node cif information from node dir
-				
+				print(os.listdir(nodes_dir))
 				node_cns = [(cncalc(node, nodes_dir), node) for node in os.listdir(nodes_dir)]
 
 				print('Number of vertices = ', len(TG.nodes()))

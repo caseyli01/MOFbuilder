@@ -1,4 +1,4 @@
-# only DEMO/TEST use
+# DEMO/TEST use only
 
 
 # MOF_builder

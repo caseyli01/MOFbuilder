@@ -44,10 +44,10 @@ def create_lG(molecule):
     return lG,metals
 
 def plot2dedge(lG,coords,cycle,EDGE_length=False):
-    pos = coords
-    nodes = np.array([pos[v] for v in lG])
-    edges = np.array([(pos[u], pos[v]) for u, v in lG.edges()])
-    pos = None
+    #pos = coords
+    #nodes = np.array([pos[v] for v in lG])
+    #edges = np.array([(pos[u], pos[v]) for u, v in lG.edges()])
+    #pos = None
     pos = coords[:,:-1]
     # explicitly set positions
     #pos = {1: (0, 0), 2: (-1, 0.3), 3: (2, 0.17), 4: (4, 0.255), 5: (5, 0.03)}
@@ -188,13 +188,13 @@ def get_bonds_from_subgraph(subgraph,Xs_indices):
     for e in list(subgraph.edges):
         atom1 = get_atom_name_in_subgraph(subgraph,e[0],Xs_indices)
         atom2 = get_atom_name_in_subgraph(subgraph,e[1],Xs_indices)
-        l = subgraph.edges[e]['weight']
+        length = subgraph.edges[e]['weight']
         sym = '.'
         if atom1[0]=='X' or atom2[0]=='X':
             bond_type = 'A'
         else:
             bond_type = 'S'
-        bonds.append([atom1,atom2,l,sym,bond_type])
+        bonds.append([atom1,atom2,length,sym,bond_type])
 
     return bonds
 

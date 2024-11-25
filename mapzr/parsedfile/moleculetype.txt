@@ -1,0 +1,4 @@
+[ moleculetype ]
+; Name            nrexcl
+ZRR          3
+

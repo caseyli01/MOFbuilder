@@ -448,6 +448,7 @@ def write_cif(placed_all, fixed_bonds, scaled_params, sc_unit_cell, cifname, cha
 def write_cif_nobond(placed_all, scaled_params, sc_unit_cell, cifname, charges, wrap_coords=True):
 
 	sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma = scaled_params
+	os.makedirs('output_cifs',exist_ok=True)
 
 	opath = os.path.join('output_cifs', cifname)
 	

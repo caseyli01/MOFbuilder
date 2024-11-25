@@ -305,6 +305,10 @@ def filt_closest_x_angle(Xs_fc,edge_center_fc,node_center_fc):
         print(rds_list)
 
 def filt_close_edgex(Xs_fc,edge_center_fc,linker_topics):
+    '''
+	find closest X for edge_center
+	return the indices and distance
+	'''
     lcs_list = []
     lcs = []
     for i in range(len(Xs_fc)):
@@ -337,6 +341,38 @@ def replace_Xbyx(single_edge):
             single_edge[i,2] = re.sub('X','x',single_edge[i,2])
     return single_edge
 
+
+def filt_xcoords(single_edge):
+    xcoords=[]
+    for i in range(len(single_edge)):
+        if single_edge[i,2][0]=='X':
+            single_edge_xcoord= single_edge[i,-3:]
+            xcoords.append(single_edge_xcoord)
+    return xcoords
+
+def correct_neighbor_nodes_order_by_edge_xs_order(eG,edge_n,single_edge):
+    neighbor_nodes = list(nx.neighbors(eG,edge_n))
+    for inn in neighbor_nodes:
+            c_nn = eG.nodes[inn]['fc']
+    a = filt_xcoords(single_edge) #edge xs orders
+    if len(a)==6:
+          a=a[-3:]
+    if len(a)==8:
+          a=a[-4:]
+          
+    b=neighbor_nodes # neighbor node->_center fc
+    ordered_neinodes=[]
+    for xc_i in range(len(a)):
+        min_l=100
+        for n in b:
+            value = eG.nodes[n]['fc']
+            l = np.linalg.norm(value-a[xc_i])
+            if l<min_l:
+                min_l = l
+                near_node = n
+        ordered_neinodes.append(near_node)
+    return ordered_neinodes
+
 def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_edges_fc,sc_unit_cell):
 
     xoo_ind_node0 = xoo_pair_ind_node(main_frag_nodes_fc,main_frag_nodes[0],sc_unit_cell)
@@ -351,20 +387,22 @@ def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_
     for i in main_frag_edges:
         cons_fc=[]
         #degree_of_edge=nx.degree(eG,i)
-        neighbor_nodes = list(nx.neighbors(eG,i))
+        #neighbor_nodes = list(nx.neighbors(eG,i))
         single_edge = main_frag_edges_fc[main_frag_edges_fc[:,5]==int(i[1:])]
-        single_edge = replace_Xbyx(single_edge)
         #print(i,neighbor_nodes,eG.nodes[i]['fc'])
         c_edge=eG.nodes[i]
         c_edge_fc = c_edge['fc']
         #c_edge_cc = np.dot(c_edge['fc'],sc_unit_cell)
+        neighbor_nodes=correct_neighbor_nodes_order_by_edge_xs_order(eG,i,single_edge)
+        single_edge = replace_Xbyx(single_edge)
+        #print(neighbor_nodes,'neighbor_nodes')
         for inn in neighbor_nodes:
             c_nn = eG.nodes[inn]
             c_nn_fc = c_nn['fc']
             #c_nn_cc = np.dot(c_nn_fc,sc_unit_cell)
             single_node = main_frag_nodes_fc[main_frag_nodes_fc[:,5]==inn]
-            xind,xs=fetch_X_atoms_ind_array(single_node,2,'X')
-            con_x,con_x_info=filt_closest_x_angle(xs[:,-3:],c_edge_fc,c_nn_fc)
+            xind,xs=fetch_X_atoms_ind_array(single_node,2,'X') # filt X atoms indices and coords in this neighbor node
+            con_x,con_x_info=filt_closest_x_angle(xs[:,-3:],c_edge_fc,c_nn_fc) #filt closest X atoms and info
             #print(i,con_x,xind[con_x[0]],neighbor_nodes)
             con_x_id=xind[con_x[0]]
             con_x_oo_id=xoo_dict[con_x_id]

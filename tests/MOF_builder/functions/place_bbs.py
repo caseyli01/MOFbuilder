@@ -238,15 +238,10 @@ def place_nodes_ditopic(nvecs, nodes_dir):
 def place_nodes_tetra(nvecs, nodes_dir):
 
 	placed_nbb_coords = []
-	placed_nbb_coords_extend = placed_nbb_coords.extend
 	placed_edge_center_coords = []
-	placed_edge_center_coords_extend = placed_edge_center_coords.extend
 	frame_nbb_coords =[]
-	frame_nbb_coords_extend = frame_nbb_coords.extend
 	all_bonds = []
-	all_bonds_extend = all_bonds.extend
 	tetra_node_name=[]
-	tetra_node_name_append= tetra_node_name.append
 	ind_seg = 0
 	bbind = 1
 
@@ -287,13 +282,13 @@ def place_nodes_tetra(nvecs, nodes_dir):
 		
 		laff_all = np.c_[anf, aff_all, chg, all_inds, [bbind] * len(anf)]
 		if "tetracenter" in cif:
-			placed_edge_center_coords_extend(laff_all)
-			placed_nbb_coords_extend(laff_all)
-			tetra_node_name_append(name)
+			placed_edge_center_coords.append(laff_all)
+			placed_nbb_coords.append(laff_all)
+			tetra_node_name.append(name)
 		else:
-			frame_nbb_coords_extend(laff_all)
-			placed_nbb_coords_extend(laff_all)
-		all_bonds_extend(abf)
+			frame_nbb_coords.append(laff_all)
+			placed_nbb_coords.append(laff_all)
+		all_bonds.append(abf)
 		ind_seg = ind_seg + len(all_names)
 
 	return placed_nbb_coords, placed_edge_center_coords,frame_nbb_coords,tetra_node_name,all_bonds

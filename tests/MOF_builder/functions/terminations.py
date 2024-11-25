@@ -302,7 +302,7 @@ def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_f
         for i_exedge in unsaturated_edges_idx:
                 exedge=usa_edges[usa_edges[:,5]==i_exedge]
                 t_edge_lines = edge_term_dict[i_exedge]
-                print(i_exedge,len(t_edge_lines))
+                #print(i_exedge,len(t_edge_lines))
                 t_usa_edge=np.vstack((exedge,t_edge_lines))
                 t_usa_edge[:,5]=int(i_exedge)
                 if int(len(t_edge_lines)/e_term_atom_num)==1:
@@ -311,6 +311,42 @@ def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_f
                     t_usa_edge[:,4]='HHEDGE'
                 elif int(len(t_edge_lines)/e_term_atom_num)==3:
                     t_usa_edge[:,4]='HHHEDGE'
+                for row_n in range(len(t_usa_edge)):
+                    t_usa_edge[row_n,2] = re.sub('[0-9]','',t_usa_edge[row_n,2])+str(row_n+1)
+                t_usa_edges.append(t_usa_edge)
+        t_usa_edges_arr = np.vstack(t_usa_edges)
+        t_edges=np.vstack((sa_edges,t_usa_edges_arr))
+        return t_edges
+    else:
+        return main_frag_edges_cc
+    
+def terminate_unsaturated_edges_CCO2(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics):
+    ex_edge_x = exposed_x_mainfrag_edge(unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
+    unsaturated_edges_idx = [int(ue[0][1:]) for ue in unsaturated_main_frag_edges]
+    if len(unsaturated_edges_idx) > 0:
+        edge_terms_cc,e_term_atom_num = add_edge_termination(e_termfile,ex_edge_x)
+        edge_term_dict = {}
+        edge_term_cc_arr = np.vstack(edge_terms_cc)
+        for idx in unsaturated_edges_idx:
+            idx_term_arr = edge_term_cc_arr[edge_term_cc_arr[:,5]==str(idx)]
+            edge_term_dict[idx] = idx_term_arr
+
+        sa_edges=main_frag_edges_cc[~np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
+        usa_edges = main_frag_edges_cc[np.isin(main_frag_edges_cc[:, 5], unsaturated_edges_idx)] 
+
+        t_usa_edges = []
+        for i_exedge in unsaturated_edges_idx:
+                exedge=usa_edges[usa_edges[:,5]==i_exedge]
+                t_edge_lines = edge_term_dict[i_exedge]
+                #print(i_exedge,len(t_edge_lines))
+                t_usa_edge=np.vstack((exedge,t_edge_lines))
+                t_usa_edge[:,5]=int(i_exedge)
+                if int(len(t_edge_lines)/e_term_atom_num)==1:
+                    t_usa_edge[:,4]='EDGE'
+                elif int(len(t_edge_lines)/e_term_atom_num)==2:
+                    t_usa_edge[:,4]='EDGE'
+                elif int(len(t_edge_lines)/e_term_atom_num)==3:
+                    t_usa_edge[:,4]='EDGE'
                 for row_n in range(len(t_usa_edge)):
                     t_usa_edge[row_n,2] = re.sub('[0-9]','',t_usa_edge[row_n,2])+str(row_n+1)
                 t_usa_edges.append(t_usa_edge)

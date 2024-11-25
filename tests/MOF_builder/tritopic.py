@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import re
 import glob
-import py3Dmol as p3d
+#import py3Dmol as p3d
 from functions.ciftemplate2graph import ct2g
 from functions.vertex_edge_assign import vertex_assign, assign_node_vecs2edges
 from functions.cycle_cocyle import cycle_cocyle, Bstar_alpha
@@ -22,7 +22,7 @@ import itertools
 from functions.cluster import cluster_supercell,placed_arr
 from functions.supercell import find_new_node_beginning,Carte_points_generator
 from functions.output import tempgro,temp_xyz,viewgro#,viewxyz
-from functions.terminations import terminate_nodes,terminate_unsaturated_edges,add_node_terminations,exposed_xoo_cc,Xpdb
+from functions.terminations import terminate_nodes,terminate_unsaturated_edges,add_node_terminations,exposed_xoo_cc,Xpdb,terminate_unsaturated_edges_CCO2
 #from functions.filtX import filt_nodex_fvec,filt_closest_x_angle,filt_outside_edgex
 from functions.multitopic import merge_multitopic_node_edge_fc
 from functions.isolated_node_cleaner import reindex_frag_array,get_frag_centers_fc,calculate_eG_net
@@ -494,7 +494,7 @@ class MOF_tri:
 		self.main_frag_nodes_cc = main_frag_nodes_cc
 		self.main_frag_edges_cc = main_frag_edges_cc   
 
-	def term_defective_model(self,n_term_file = 'data/methyl.pdb',e_termfile = 'data/CCO2H2.pdb'):
+	def term_defective_model(self,n_term_file = 'data/methyl.pdb',e_termfile = 'data/CCO2.pdb'):
 		eG = self.eG
 		unsaturated_main_frag_nodes = self.unsaturated_main_frag_nodes
 		main_frag_nodes = self.main_frag_nodes
@@ -526,9 +526,15 @@ class MOF_tri:
 		self.n_terms_cc = n_terms_cc
 
 		#add -COOH term to exposed edge and change edge name to HEDGE
-		cleaved_metal_node = main_frag_nodes_cc[metal_node_indices]
-		t_edges = terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
-		node_edge_term_cc= np.vstack((cleaved_metal_node,t_edges,n_terms_cc))
+		if os.path.basename(e_termfile) == 'CCO2.pdb':
+			cleaved_metal_node = main_frag_nodes_cc[metal_node_indices]
+			t_edges = terminate_unsaturated_edges_CCO2(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
+			node_edge_term_cc= np.vstack((cleaved_metal_node,t_edges,n_terms_cc))
+
+		else:
+			cleaved_metal_node = main_frag_nodes_cc[metal_node_indices]
+			t_edges = terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
+			node_edge_term_cc= np.vstack((cleaved_metal_node,t_edges,n_terms_cc))
 		self.t_edges = t_edges
 		self.tn_te_cc = node_edge_term_cc
 			

@@ -1,0 +1,47 @@
+data_tetraedge
+_audit_creation_date              2024-12-07
+_audit_creation_method            'MOFbuilder'
+_symmetry_space_group_name_H-M    'P1'
+_symmetry_Int_Tables_number       1
+_symmetry_cell_setting            triclinic
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+_cell_length_a                    50
+_cell_length_b                    50
+_cell_length_c                    50
+_cell_angle_alpha                 90
+_cell_angle_beta                  90
+_cell_angle_gamma                 90
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+X1         C    0.0095688748    0.8899550089    0.1102067232   0.00000  Uiso   1.00       -0.000000
+C2         C    0.0302248748    0.8939090089    0.0917267232   0.00000  Uiso   1.00       -0.000000
+C3         C    0.0284648748    0.9135570089    0.0719847232   0.00000  Uiso   1.00       -0.000000
+X4         C    0.0058208748    0.9301030089    0.0700387232   0.00000  Uiso   1.00       -0.000000
+C5         C    0.9851048748    0.9261630089    0.0886227232   0.00000  Uiso   1.00       -0.000000
+C6         C    0.9870168748    0.9064330089    0.1082767232   0.00000  Uiso   1.00       -0.000000
+H7         H    0.0476448748    0.8810310089    0.0935107232   0.00000  Uiso   1.00       -0.000000
+H8         H    0.0447128748    0.9163690089    0.0577827232   0.00000  Uiso   1.00       -0.000000
+H9         H    0.9674188748    0.9387910089    0.0873907232   0.00000  Uiso   1.00       -0.000000
+H10        H    0.9711008748    0.9030890089    0.1227007232   0.00000  Uiso   1.00       -0.000000
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_site_symmetry_2
+_ccdc_geom_bond_type
+X1           C2 0.028       .   A
+X1           C6 0.028       .   A
+C2           C3 0.028       .   S
+C2           H7 0.022       .   S
+C3           X4 0.028       .   A
+C3           H8 0.022       .   S
+X4           C5 0.028       .   A
+C5           C6 0.028       .   S
+C5           H9 0.022       .   S
+C6          H10 0.022       .   S

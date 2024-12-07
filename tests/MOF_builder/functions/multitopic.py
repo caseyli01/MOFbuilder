@@ -35,14 +35,14 @@ def centerize_edges_cc(target_edges_list,target_node_c,sc_unit_cell):
     edges_update_append = edges_update.append
     for te_ccord in target_edges_list:
         te = te_ccord[:,1:4]- target_node_c
-        te_fvec = np.dot(te,np.linalg.inv(sc_unit_cell))
+        te_fvec = np.dot(np.linalg.inv(sc_unit_cell),te.T).T
         edge_c_fvec = np.mean(te_fvec,axis=0).tolist()
         cx,cy,cz = edge_c_fvec
         cx1 = limit_x(cx)
         cy1 = limit_x(cy)
         cz1 = limit_x(cz)
         differ = np.asarray([cx1,cy1,cz1])-np.asarray(edge_c_fvec)
-        te_update = np.hstack((te_ccord[:,0:1],te+np.dot(differ,sc_unit_cell)+target_node_c,te_ccord[:,4:]))
+        te_update = np.hstack((te_ccord[:,0:1],te+np.dot(sc_unit_cell,differ.T).T+target_node_c,te_ccord[:,4:]))
         edges_update_append(te_update)
         #print(differ)
     return np.vstack((edges_update))

@@ -28,7 +28,7 @@ def tempgro(output,all_array):
                     value_z,
                 )
                 newgro.append(formatted_line + "\n")
-            tail = "5 5 5 \n"
+            tail = "100 100 100 \n"
             newgro.append(tail)
             fp.writelines(newgro)
 

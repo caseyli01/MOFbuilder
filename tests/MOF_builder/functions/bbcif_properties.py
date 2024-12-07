@@ -359,27 +359,3 @@ def O_vecs(cifname, direc, label):
 
 	return shifted_ccoords
 
-
-#ef node_xopaircalc(cifname,direc):
-#	node_connection_points = [list(map(float,i[1:4])) for i in placed_nodes if re.sub('[0-9]','',i[5]) == 'X']
-#	node_oxy_points = [list(map(float,i[1:4])) for i in placed_nodes if re.sub('[0-9]','',i[5]) == 'O']
-#	'''look for two nearest Oxys for every X'''
-#	X_Opair = []
-#	X_Opair_append = X_Opair.append
-#	for i in range(len(node_connection_points)):
-#		cdist_xos = []
-#		cdist_xos_sort = []
-#		cdist_xos_append=cdist_xos.append
-#		cdist_xos_sort_append=cdist_xos_sort.append
-#		fvec_x= node_connection_points[i]
-#		for j in range(len(node_oxy_points)):
-#			fvec_o= node_connection_points[j]
-#			fvec_xo = fvec_o-fvec_x 	
-#			fdist_xo = np.dot(np.linalg.inv(sc_unit_cell), fvec_xo)
-#			cdist_xo = np.linalg.norm(np.dot(sc_unit_cell, fdist_xo))
-#			cdist_xos_append(cdist_xo)
-#			cdist_xos_sort_append(cdist_xo)
-#		cdist_xos_sort.sort()
-#		cdist_xos_sort3rd=cdist_xos_sort[-3]
-#		opair=[index for index,value in enumerate(cdist_xos) if value < cdist_xos_sort3rd]
-#		X_Opair_append(('X'+str(i),(opair)))

@@ -161,7 +161,6 @@ def _adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 			idx_nx = min_dist[2]
 			corresponding_o_vec = [newno_fxnx(f_ex,target_nx,sc_unit_cell,no) for no in X_Opair[idx_nx][3]]
 			corresponding_x_vec = [newno_fxnx(f_ex,target_nx,sc_unit_cell,target_nx)]
-			#corresponding_o_vec = np.dot(X_Opair[idx_nx][2],sc_unit_cell)
 			pairo_indices = X_Opair[idx_nx][2]
 			elems_nopair = [no_elems[i] for i in pairo_indices]
 			charges_nopair = [no_charges[i] for i in pairo_indices]
@@ -195,10 +194,6 @@ def _adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	return adjusted_placed_edges,adjusted_placed_OXedges,placed_nodes,X_Opair
 
 
-
-
-
-
 def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 
 	adjusted_placed_edges = []
@@ -208,7 +203,6 @@ def adjust_edges(placed_edges, placed_nodes, sc_unit_cell):
 	edge_labels = set(map(int, placed_edges[:,-1]))
 
 	edge_dict = dict((k,[]) for k in edge_labels)
-
 	node_connection_points = [list(map(float,i[1:4])) for i in placed_nodes if re.sub('[0-9]','',i[5]) == 'X']
 
 	for edge in placed_edges:
@@ -268,7 +262,6 @@ def fetch_X_atoms_ind_array(array,column,X):
     return ind,x_array
 
 
-
 def get_rad_v1v2(v1,v2):
     cos_theta = np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
     if cos_theta ==0:
@@ -324,7 +317,7 @@ def filt_close_edgex(Xs_fc,edge_center_fc,linker_topics):
 def xoo_pair_ind_node(main_frag_nodes_fc,node_id,sc_unit_cell):
     xoo_ind_node = []
     single_node_fc=main_frag_nodes_fc[main_frag_nodes_fc[:,5]==node_id]
-    single_node = np.hstack((single_node_fc[:,:-3],np.dot(single_node_fc[:,-3:],sc_unit_cell)))
+    single_node = np.hstack((single_node_fc[:,:-3],np.dot(sc_unit_cell,single_node_fc[:,-3:].T).T))
     xind,xs=fetch_X_atoms_ind_array(single_node,2,'X')
     oind,os=fetch_X_atoms_ind_array(single_node,2,'O')
     for i in xind:
@@ -364,13 +357,15 @@ def correct_neighbor_nodes_order_by_edge_xs_order(eG,edge_n,single_edge):
     ordered_neinodes=[]
     for xc_i in range(len(a)):
         min_l=100
+
         for n in b:
             value = eG.nodes[n]['fc']
             l = np.linalg.norm(value-a[xc_i])
             if l<min_l:
                 min_l = l
                 near_node = n
-        ordered_neinodes.append(near_node)
+        
+        ordered_neinodes.append(near_node) if near_node not in ordered_neinodes else  None
     return ordered_neinodes
 
 def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_edges_fc,sc_unit_cell):
@@ -392,14 +387,12 @@ def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_
         #print(i,neighbor_nodes,eG.nodes[i]['fc'])
         c_edge=eG.nodes[i]
         c_edge_fc = c_edge['fc']
-        #c_edge_cc = np.dot(c_edge['fc'],sc_unit_cell)
         neighbor_nodes=correct_neighbor_nodes_order_by_edge_xs_order(eG,i,single_edge)
         single_edge = replace_Xbyx(single_edge)
         #print(neighbor_nodes,'neighbor_nodes')
         for inn in neighbor_nodes:
             c_nn = eG.nodes[inn]
             c_nn_fc = c_nn['fc']
-            #c_nn_cc = np.dot(c_nn_fc,sc_unit_cell)
             single_node = main_frag_nodes_fc[main_frag_nodes_fc[:,5]==inn]
             xind,xs=fetch_X_atoms_ind_array(single_node,2,'X') # filt X atoms indices and coords in this neighbor node
             con_x,con_x_info=filt_closest_x_angle(xs[:,-3:],c_edge_fc,c_nn_fc) #filt closest X atoms and info

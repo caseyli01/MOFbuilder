@@ -38,8 +38,11 @@ def termpdb(filename):
 def terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc_loose,sc_unit_cell,box_bound):
     ex_node_cxo_cc_loose = exposed_Xs_Os_boundary_node(boundary_connected_nodes_res,connected_nodeedge_fc_loose,sc_unit_cell,box_bound)
     terms_loose = add_terminations(term_file,ex_node_cxo_cc_loose)
-    terms_cc_loose = np.vstack((terms_loose))
-    return terms_cc_loose
+    if len(terms_loose) > 0:
+        terms_cc_loose = np.vstack((terms_loose))
+        return terms_cc_loose
+    else:
+        return np.empty((0,9),dtype='O')
 
 def Xpdb(data,X): 
         indices=[i for i in range(len(data)) if data[i,2][0] == X]
@@ -316,6 +319,7 @@ def terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_f
                 t_usa_edges.append(t_usa_edge)
         t_usa_edges_arr = np.vstack(t_usa_edges)
         t_edges=np.vstack((sa_edges,t_usa_edges_arr))
+    
         return t_edges
     else:
         return main_frag_edges_cc

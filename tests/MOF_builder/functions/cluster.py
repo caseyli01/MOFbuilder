@@ -72,7 +72,7 @@ def fc_assign_res_idx(placed_all,sc_unit_cell):
         r_id = res_id[i]
         res_arr= placed_all_arr[placed_all_arr[:,6]==r_id]
         vec = res_arr[:,1:4]
-        cvec = np.dot(vec,np.linalg.inv(sc_unit_cell))
+        cvec = np.dot(np.linalg.inv(sc_unit_cell),vec.T).T
         #moded_cvec = np.mod(cvec, 1)
         #cvec=moded_cvec   
         res_arr[:,1:4] = cvec
@@ -245,63 +245,13 @@ def fetch_X_atoms_array(array,column):
     x_array= np.asarray([k for k in array if re.sub(r'\d','',k[column]) == 'X'])
     return x_array
 
-def _exposed_Xs_Os_boundary_node(boundary_node_res,bare_nodeedge_fc,sc_unit_cell,box_bound):
-    '''look for two nearest Oxys for every exposed(unsaturated X) in boundary nodes'''
-    ex_node_cxo_cc=[]
-    ex_node_cxo_cc_append=ex_node_cxo_cc.append
-    edgex_fvec = filt_edgex_fvec(bare_nodeedge_fc)
-    edgex_cvec_array = np.dot(edgex_fvec[:,-3:],sc_unit_cell)
-
-    for i in list(set(boundary_node_res)):
-        count=len(np.where(np.asarray(boundary_node_res)==i)[0])+1 # =1 is because original node + moded_nodes
-        ress_fc=bare_nodeedge_fc[bare_nodeedge_fc[:,5]==i]
-        res_s_fc=ress_fc.reshape((count,int(ress_fc.shape[0]/count),ress_fc.shape[1]))
-        for n in range(count):
-            node=res_s_fc[n]
-            node_center_fc = np.mean(node[:,-3:],axis=0)
-            Xs_fc = np.asarray([k[-3:] for k in node if re.sub(r'\d','',k[2]) == 'X'])
-            Os_fc = np.asarray([g[-3:] for g in node if re.sub(r'\d','',g[2]) == 'O'])
-            Os_cc = np.dot(Os_fc,sc_unit_cell)
-            #Xs_fc = np.dot(Xs,np.linalg.inv(sc_unit_cell))
-            Xs_fc = Xs_fc.astype(float)
-            exposed_Xs_fc=[x for x in Xs_fc if not check_nodex_inbox(x.round(4),box_bound)]
-            if len(exposed_Xs_fc)>0:
-                exposed_Xs_cc=np.dot(exposed_Xs_fc,sc_unit_cell) 
-                for x in exposed_Xs_cc:
-                    if check_overlapX(edgex_cvec_array,x):
-                        continue
-                    else:
-                        cdist_xos = []
-                        cdist_xos_sort = []
-                        cdist_xos_append=cdist_xos.append
-                        cdist_xos_sort_append=cdist_xos_sort.append
-                        for j in range(len(Os_cc)):
-                            cvec_o= Os_cc[j]
-                            #cvec_xo = np.asarray(cvec_o)-np.asarray(x) 	
-                            cvec_xo = cvec_o-x
-                            cdist_xo = np.linalg.norm(cvec_xo)
-                            cdist_xos_append(cdist_xo)
-                            cdist_xos_sort_append(cdist_xo)
-                        cdist_xos_sort.sort()
-                        cdist_xos_sort3rd=cdist_xos_sort[2]
-                        node_ovecs_idx=[index for index,value in enumerate(cdist_xos) if value < cdist_xos_sort3rd]
-                        #print(i,n,len(node_ovecs_idx))
-                        node_ovecs_cc=[Os_cc[o] for o in node_ovecs_idx]
-            
-                        ex_node_cxo_cc_append((node_center_fc,len(exposed_Xs_cc),'exposed_X',x,'node_Opair',node_ovecs_cc,node_ovecs_idx))
-        
-                    #print(f"center{node_center},Xs{len(exposed_Xs_fc)},'\n'{exposed_Xs_cc}")
-            #print(res_s.shape)
-    return ex_node_cxo_cc
-
-
 
 def exposed_Xs_Os_boundary_node(boundary_node_res,connected_nodeedge_fc,sc_unit_cell,box_bound):
     '''look for two nearest Oxys for every exposed(unsaturated X) in boundary nodes'''
     ex_node_cxo_cc=[]
     ex_node_cxo_cc_append=ex_node_cxo_cc.append
     edgex_fvec = filt_edgex_fvec(connected_nodeedge_fc)
-    edgex_cvec_array = np.dot(edgex_fvec[:,-3:],sc_unit_cell)
+    edgex_cvec_array = np.dot(sc_unit_cell,edgex_fvec[:,-3:].T).T
 
     for i in list(boundary_node_res):
         #count=len(np.where(np.asarray(boundary_node_res)==i)[0])+1 # =1 is because original node + moded_nodes
@@ -312,12 +262,12 @@ def exposed_Xs_Os_boundary_node(boundary_node_res,connected_nodeedge_fc,sc_unit_
         node_center_fc = np.mean(node[:,-3:],axis=0)
         Xs_fc = np.asarray([k[-3:] for k in node if re.sub(r'\d','',k[2]) == 'X'])
         Os_fc = np.asarray([g[-3:] for g in node if re.sub(r'\d','',g[2]) == 'O'])
-        Os_cc = np.dot(Os_fc,sc_unit_cell)
-        #Xs_fc = np.dot(Xs,np.linalg.inv(sc_unit_cell))
+        Os_cc = np.dot(sc_unit_cell,Os_fc.T).T
+        #Xs_fc = np.dot(np.linalg.inv(sc_unit_cell),Xs)
         Xs_fc = Xs_fc.astype(float)
-        exposed_Xs_fc=[x for x in Xs_fc if not check_nodex_inbox(x.round(4),box_bound)]
+        exposed_Xs_fc=np.asarray([x for x in Xs_fc if not check_nodex_inbox(x.round(4),box_bound)])
         if len(exposed_Xs_fc)>0:
-            exposed_Xs_cc=np.dot(exposed_Xs_fc,sc_unit_cell) 
+            exposed_Xs_cc=np.dot(sc_unit_cell,exposed_Xs_fc.T).T
             for x in exposed_Xs_cc:
                 if check_overlapX(edgex_cvec_array,x):
                     continue
@@ -357,7 +307,7 @@ def supercell_nodeedge(supercell_Carte,target_all,sc_unit_cell,box_bound):
 
     super_ne = []
     super_ne_info =[]
-    fvec_all = np.dot(target_all[:,1:4],np.linalg.inv(sc_unit_cell))
+    fvec_all = np.dot(np.linalg.inv(sc_unit_cell),target_all[:,1:4].T).T
     for i in range(len(supercell_Carte)):
         super_ne.append(supercell_Carte[i]+fvec_all) 
         info=np.concatenate((fvec_all_info, np.asarray([rescount]).T+i*len(old_res_idx)), axis=1)
@@ -400,7 +350,6 @@ def supercell_nodeedge_fc(supercell_Carte,target_all_fc,box_bound):
 
 
 def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,scalar,cutx,cuty,cutz):
-
     old_res_idx,rescount = fetch_rescount_targetall(target_all_fc)
     fvec_all_info = np.hstack((target_all_fc[:,0:1],target_all_fc[:,4:]))
     info = fvec_all_info
@@ -415,8 +364,9 @@ def supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,sc
 
     super_ne_array2d=np.vstack((super_ne))
     super_ne_info2d=np.vstack((super_ne_info))
-    #moded_super_ne_array2d = np.mod(super_ne_array2d,scalar*box_bound)
-    moded_super_ne_array2d = cut_boundary(super_ne_array2d,box_bound,scalar,cutx,cuty,cutz)
+
+    #moded_super_ne_array2d = np.mod(super_ne_array2d,box_bound) #TODO: NOTE: original
+    moded_super_ne_array2d = cut_boundary(super_ne_array2d,box_bound,scalar,cutx,cuty,cutz) 
     row_diff = np.any(super_ne_array2d != moded_super_ne_array2d, axis=1)
     row_diff_idx=[i for i in range(len(row_diff)) if row_diff[i]]
     s_fvec_all= np.hstack((super_ne_info2d,super_ne_array2d))
@@ -507,7 +457,7 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,
             res=s_fvec_all[s_fvec_all[:,5]==i]
             original_fvec = res[:,-3:]
             original_fvec = original_fvec.astype(float)
-            #moded_fvec = np.mod(original_fvec,scalar*box_bound)
+            #moded_fvec = np.mod(original_fvec,box_bound) #TODO: NOTE:
             moded_fvec = cut_boundary(original_fvec,box_bound,scalar,cutx,cuty,cutz)
             #print(f"original{original_fvec} moded{moded_fvec}")
             row_diff = diff_rows_count_two_array(original_fvec,moded_fvec)
@@ -555,13 +505,10 @@ def filt_boundary_res_loose_check(s_fvec_all,row_diff_idx,box_bound,scalar,cutx,
     return safe_res,extra_res_arr,boundary_node_res
 
 
-def cluster_supercell(supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar):
+def cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar):
     s_fvec_all_loose,row_diff_idx_loose = supercell_nodeedge_fc_loose_check(supercell_Carte,target_all_fc,box_bound,scalar,cutx,cuty,cutz) 
-    #print("row_diff_idx_loose",row_diff_idx_loose)
-
+    print("row_diff_idx_loose",row_diff_idx_loose)
     safe_res_fc_loose,extra_res_fc_loose,boundary_node_res_loose = filt_boundary_res_loose_check(s_fvec_all_loose,row_diff_idx_loose,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)
     bare_nodeedge_fc_loose=np.vstack((safe_res_fc_loose,extra_res_fc_loose))
-
-    connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG = filter_connected_node_loose(bare_nodeedge_fc_loose,boundary_node_res_loose,linker_topics)
-
+    connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG = filter_connected_node_loose(bare_nodeedge_fc_loose,boundary_node_res_loose,linker_topics,sc_unit_cell)
     return connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose

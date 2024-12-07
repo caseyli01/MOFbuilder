@@ -299,7 +299,6 @@ class MOF_tetra:
 
 						scaled_coords = omega2coords(start, TG, sc_omega_plus, (sc_a,sc_b,sc_c,sc_alpha,sc_beta,sc_gamma), num_vertices,templates_dir, template, g, WRITE_CHECK_FILES)
 						nvecs,evecs,node_placed_edges = scaled_node_and_edge_vectors(scaled_coords, sc_omega_plus, sc_unit_cell, ea_dict)
-
 						placed_nodes, tetra_node, frame_nbb_node,tetra_node_name,node_bonds = place_nodes_tetra(nvecs, nodes_dir)
 						placed_edges, edge_bonds = place_edges(evecs, edges_dir,CHARGES, len(placed_nodes))
 						placed_edges = adjust_edges(placed_edges, placed_nodes, sc_unit_cell)
@@ -364,8 +363,11 @@ class MOF_tetra:
 		self.placed_edges = placed_edges
 		self.frame_nbb_node = frame_nbb_node
 
-	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',scalar = 0.00,boundary_scalar = 0.0,cutxyz=[True,True,True]):
+
+	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',boundary_cut_buffer= 0.00,edge_center_check_buffer = 0.0,cutxyz=[True,True,True]):
 		linker_topics = self.linker_topics
+		scalar = boundary_cut_buffer
+		boundary_scalar = edge_center_check_buffer
 		cutx,cuty,cutz = cutxyz
 		TG = self.TG
 
@@ -377,23 +379,25 @@ class MOF_tetra:
 		frame_node_name=[i for i in list(TG.nodes()) if i not in tetra_node_name]
 		frame_node_fc=np.asarray([TG.nodes[fn]['fcoords']for fn in frame_node_name])
     
-		new_beginning_fc = find_new_node_beginning(frame_node_fc)		
+		#new_beginning_fc = #find_new_node_beginning(frame_node_fc)		
 		placed_nodes_arr,nodes_id=placed_arr(placed_nodes)
 		placed_edges_arr,edges_id=placed_arr(placed_edges)		
-		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],np.dot(placed_nodes_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_nodes_arr[:,4:]))
-		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],np.dot(placed_edges_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_edges_arr[:,4:]))		
+		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_nodes_arr[:,1:4].T)).T,placed_nodes_arr[:,4:]))
+		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_edges_arr[:,1:4].T)).T,placed_edges_arr[:,4:]))	#TODO: NOTE:
 		frame_node_ccoords= np.c_[frame_nbb_node,['NODE']*len(frame_nbb_node)]
 		placed_frame_node,_ = placed_arr(frame_node_ccoords)
-		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],np.dot(placed_frame_node[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_frame_node[:,4:]))		
+		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_frame_node[:,1:4].T)).T,placed_frame_node[:,4:]))		
+		
 		tetratopic_edges_fcoords = merge_multitopic_node_edge_fc(TG,tetra_node_name,placed_nodes_fc,placed_edges_fc)		
 		target_all_fc = np.vstack((placed_frame_node_fc,tetratopic_edges_fcoords))
-        #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason for use above version node is because we need xoo in node for terminations adding
+        #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason of using above version node is because we need xoo in node for terminations adding
 		box_bound= supercell+1
 		supercell_Carte = Carte_points_generator(supercell)		
-		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
+
+		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
 		terms_cc_loose = terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc,sc_unit_cell,box_bound)
 
-		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],np.dot(connected_nodeedge_fc[:,-3:],sc_unit_cell)))
+		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],(np.dot(sc_unit_cell,connected_nodeedge_fc[:,-3:].T)).T))
 		#print(connected_nodeedge_cc.shape,terms_cc_loose.shape)
 
 		node_edge_term_cc_loose = np.vstack((connected_nodeedge_cc,terms_cc_loose))		
@@ -401,12 +405,15 @@ class MOF_tetra:
 		self.all_terms_cc_loose = terms_cc_loose
 		self.all_N_E_T_cc = node_edge_term_cc_loose		
 		self.bare_nodeedge_fc = bare_nodeedge_fc_loose
+		self.eG = eG
+		self.nodes_id = nodes_id
+		self.edges_id = edges_id
 		
 	def write_basic_supercell(self,gro,xyz):
-		tempgro('40test.gro',self.all_connected_node_edge_cc[self.all_connected_node_edge_cc[:,5]==1])
+		#tempgro('40test.gro',self.all_connected_node_edge_cc[self.all_connected_node_edge_cc[:,5]==1])
 		tempgro(gro,self.all_N_E_T_cc)
 		temp_xyz(xyz,self.all_N_E_T_cc)
-		viewgro("40test.gro")
+		#viewgro("40test.gro")
 		viewgro(gro)
 	
 	
@@ -452,7 +459,7 @@ class MOF_tetra:
 		edgefc_centers = get_frag_centers_fc(reedge_fcarr)
 		nodefc_centers = get_frag_centers_fc(renode_fcarr)
 
-		eG = calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics)
+		eG = calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics,sc_unit_cell)
 		eG_subparts=[len(c) for c in sorted(nx.connected_components(eG), key=len, reverse=True)]
 
 		if len(eG_subparts)>1:
@@ -483,8 +490,8 @@ class MOF_tetra:
 		main_frag_nodes_fc = np.vstack(([renode_fcarr[renode_fcarr[:,5]==ni]for ni in main_frag_nodes]))
 		main_frag_edges_fc,xoo_dict,con_nodes_x_dict = addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_half_edges_fc,sc_unit_cell)
 
-		main_frag_nodes_cc = np.hstack((main_frag_nodes_fc[:,:-3],np.dot(main_frag_nodes_fc[:,-3:],sc_unit_cell)))
-		main_frag_edges_cc = np.hstack((main_frag_edges_fc[:,:-3],np.dot(main_frag_edges_fc[:,-3:],sc_unit_cell)))
+		main_frag_nodes_cc = np.hstack((main_frag_nodes_fc[:,:-3],np.dot(sc_unit_cell,main_frag_nodes_fc[:,-3:].T).T))
+		main_frag_edges_cc = np.hstack((main_frag_edges_fc[:,:-3],np.dot(sc_unit_cell,main_frag_edges_fc[:,-3:].T).T))
 		self.eG = eG
 		self.main_frag_nodes = main_frag_nodes
 		self.main_frag_edges = main_frag_edges

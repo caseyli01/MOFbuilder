@@ -424,12 +424,12 @@ class MOF_ditopic:
 		self.placed_nodes = placed_nodes
 		self.placed_edges = placed_edges
 
-	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',scalar = 0.00,boundary_scalar = 0.0,cutxyz=[True,True,True]):
+	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',boundary_cut_buffer = 0.00,edge_center_check_buffer = 0.0,cutxyz=[True,True,True]):
 		linker_topics = self.linker_topics
 		cutx,cuty,cutz = cutxyz
 		TG = self.TG
-
-
+		scalar = boundary_cut_buffer
+		boundary_scalar = edge_center_check_buffer
 		placed_edges = self.placed_edges
 		placed_nodes = self.placed_nodes
 		sc_unit_cell = self.sc_unit_cell
@@ -447,7 +447,7 @@ class MOF_ditopic:
         #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason for use above version node is because we need xoo in node for terminations adding
 		box_bound= supercell+1
 		supercell_Carte = Carte_points_generator(supercell)		
-		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
+		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
 		terms_cc_loose = terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc,sc_unit_cell,box_bound)
 
 		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],np.dot(connected_nodeedge_fc[:,-3:],sc_unit_cell)))

@@ -1,0 +1,51 @@
+data_csq_v1-tetracenter_v2-8c_Zr_1_Ch_1-tetraedgenobond
+_audit_creation_date              2024-12-05
+_audit_creation_method            'tobacco_3.0'
+_symmetry_space_group_name_H-M    'P1'
+_symmetry_Int_Tables_number       1
+_symmetry_cell_setting            triclinic
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+_cell_length_a                    43.32444983929167
+_cell_length_b                    43.32964680489529
+_cell_length_c                    16.002519976004127
+_cell_angle_alpha                 89.99866321125361
+_cell_angle_beta                  89.99762144042764
+_cell_angle_gamma                 120.00801341385639
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+Co33      Co    0.7499939473    0.4999851843   -0.0000001581
+Co66      Co    0.4911572381    0.2412669090    0.9997951539
+Co99      Co    0.7499503355    0.2413844539    0.0000231196
+Co132     Co    0.4969292177    0.7441534020    0.9997031699
+Co165     Co    0.2472703502    0.4946008956    0.0000056416
+Co198     Co    0.2473209607    0.7440218476    0.0000326131
+Zr211     Zr    0.9934001448    0.4538934714    0.5894939106
+Zr214     Zr    0.9934182868    0.5308864921    0.5894918180
+Zr231     Zr    0.9977201509    0.4560547550    0.3818679840
+Zr234     Zr    0.9977382930    0.5330477757    0.3818658914
+Zr237     Zr    0.9424512179    0.4669177902    0.4796128286
+Zr238     Zr    1.0486925444    0.5200261186    0.4917475815
+Zr273     Zr    0.4604399353    0.4538958726    0.4105303305
+Zr276     Zr    0.5374563447    0.5308752451    0.4105287879
+Zr293     Zr    0.4582777668    0.4560528281    0.6181557531
+Zr296     Zr    0.5352941762    0.5330322006    0.6181542105
+Zr299     Zr    0.5244083239    0.4668969232    0.5204155437
+Zr300     Zr    0.4713231271    0.5200338131    0.5082683885
+Zr335     Zr    0.5374614300    0.9979553849    0.4105856371
+Zr338     Zr    0.4604411751    0.9979012352    0.4105767871
+Zr355     Zr    0.5352948465    0.9936336266    0.6182111980
+Zr358     Zr    0.4582745915    0.9935794770    0.6182023480
+Zr361     Zr    0.5244052013    1.0488789857    0.5204655618
+Zr362     Zr    0.4713281602    0.9426505522    0.5083218146
+loop_
+_geom_bond_atom_site_label_1
+_geom_bond_atom_site_label_2
+_geom_bond_distance
+_geom_bond_site_symmetry_2
+_ccdc_geom_bond_type

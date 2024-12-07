@@ -27,7 +27,7 @@ def tric_points(Carte_points,unit_cell):
         #    self.z_num,
         #)
         if len(Carte_points)>0:
-            supercell_tric_points = np.round(np.dot(Carte_points, unit_cell),3)
+            supercell_tric_points = np.round(np.dot(unit_cell,Carte_points.T).T,3)
             return supercell_tric_points
         else:
             return np.empty((0,3))

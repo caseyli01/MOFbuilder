@@ -365,10 +365,12 @@ class MOF_tri:
 		self.placed_edges = placed_edges
 		self.frame_nbb_node = frame_nbb_node
 
-	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',scalar = 0.00,boundary_scalar = 0.0,cutxyz=[True,True,True]):
+	def basic_supercell(self,supercell,term_file = 'data/methyl.pdb',boundary_cut_buffer = 0.00,edge_center_check_buffer = 0.0,cutxyz=[True,True,True]):
 		linker_topics = self.linker_topics
 		cutx,cuty,cutz = cutxyz
 		TG = self.TG
+		scalar = boundary_cut_buffer
+		boundary_scalar = edge_center_check_buffer
 
 		tri_node_name = self.tri_node_name
 		placed_edges = self.placed_edges
@@ -381,20 +383,20 @@ class MOF_tri:
 		new_beginning_fc = find_new_node_beginning(frame_node_fc)		
 		placed_nodes_arr,nodes_id=placed_arr(placed_nodes)
 		placed_edges_arr,edges_id=placed_arr(placed_edges)		
-		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],np.dot(placed_nodes_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_nodes_arr[:,4:]))
-		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],np.dot(placed_edges_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_edges_arr[:,4:]))		
+		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_nodes_arr[:,1:4].T)).T,placed_nodes_arr[:,4:]))
+		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_edges_arr[:,1:4].T)).T,placed_edges_arr[:,4:]))		
 		frame_node_ccoords= np.c_[frame_nbb_node,['NODE']*len(frame_nbb_node)]
 		placed_frame_node,_ = placed_arr(frame_node_ccoords)
-		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],np.dot(placed_frame_node[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_frame_node[:,4:]))		
+		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_frame_node[:,1:4])).T,placed_frame_node[:,4:]))		
 		tritopic_edges_fcoords = merge_multitopic_node_edge_fc(TG,tri_node_name,placed_nodes_fc,placed_edges_fc)		
 		target_all_fc = np.vstack((placed_frame_node_fc,tritopic_edges_fcoords))
         #target_all_fc = np.vstack((placed_nodes_fc,tritopic_edges_fcoords)) # the reason for use above version node is because we need xoo in node for terminations adding
 		box_bound= supercell+1
 		supercell_Carte = Carte_points_generator(supercell)		
-		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
+		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
 		terms_cc_loose = terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc,sc_unit_cell,box_bound)
 
-		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],np.dot(connected_nodeedge_fc[:,-3:],sc_unit_cell)))
+		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],(np.dot(sc_unit_cell,connected_nodeedge_fc[:,-3:])).T))
 		#print(connected_nodeedge_cc.shape,terms_cc_loose.shape)
 
 		node_edge_term_cc_loose = np.vstack((connected_nodeedge_cc,terms_cc_loose))		
@@ -451,7 +453,7 @@ class MOF_tri:
 		edgefc_centers = get_frag_centers_fc(reedge_fcarr)
 		nodefc_centers = get_frag_centers_fc(renode_fcarr)
 
-		eG = calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics)
+		eG = calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics,sc_unit_cell)
 		eG_subparts=[len(c) for c in sorted(nx.connected_components(eG), key=len, reverse=True)]
 
 		if len(eG_subparts)>1:
@@ -482,8 +484,8 @@ class MOF_tri:
 		main_frag_nodes_fc = np.vstack(([renode_fcarr[renode_fcarr[:,5]==ni]for ni in main_frag_nodes]))
 		main_frag_edges_fc,xoo_dict,con_nodes_x_dict = addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_half_edges_fc,sc_unit_cell)
 
-		main_frag_nodes_cc = np.hstack((main_frag_nodes_fc[:,:-3],np.dot(main_frag_nodes_fc[:,-3:],sc_unit_cell)))
-		main_frag_edges_cc = np.hstack((main_frag_edges_fc[:,:-3],np.dot(main_frag_edges_fc[:,-3:],sc_unit_cell)))
+		main_frag_nodes_cc = np.hstack((main_frag_nodes_fc[:,:-3],np.dot(sc_unit_cell,main_frag_nodes_fc[:,-3:].T).T))
+		main_frag_edges_cc = np.hstack((main_frag_edges_fc[:,:-3],np.dot(sc_unit_cell,main_frag_edges_fc[:,-3:].T).T))
 		self.eG = eG
 		self.main_frag_nodes = main_frag_nodes
 		self.main_frag_edges = main_frag_edges

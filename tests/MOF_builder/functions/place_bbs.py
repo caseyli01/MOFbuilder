@@ -236,7 +236,6 @@ def place_nodes_ditopic(nvecs, nodes_dir):
 
 
 def place_nodes_tetra(nvecs, nodes_dir):
-
 	placed_nbb_coords = []
 	placed_edge_center_coords = []
 	frame_nbb_coords =[]
@@ -248,8 +247,19 @@ def place_nodes_tetra(nvecs, nodes_dir):
 	for n in nvecs:
 		bbind = bbind + 1
 		name,cvec,cif,nvec = n
+		#ll = 0
+		#
+		#for v in nvec:
+		#	mag = np.linalg.norm(v - np.average(nvec, axis = 0))
+		#	if mag > ll:
+		#		ll = mag
+
 		bbxvec = np.array(X_vecs(cif,nodes_dir,False))
+		#if ORIENTATION_DEPENDENT_NODES:
 		nbbxvec = bbxvec
+		#else:
+		#	nbbxvec = np.array([ll*(v / np.linalg.norm(v)) for v in bbxvec])
+
 		min_dist,rot,tran = superimpose(nbbxvec,nvec)
 
 		all_bb = bb2array(cif, nodes_dir)
@@ -257,6 +267,7 @@ def place_nodes_tetra(nvecs, nodes_dir):
 		all_inds = np.array([v[0] for v in all_bb])
 		chg, elem = bbcharges(cif, nodes_dir)
 		all_names = [o + re.sub('[A-Za-z]','',p) for o,p in zip(elem,all_inds)]
+		#print(f'all_name{all_names}')
 
 		all_names_indices = np.array([int(re.sub('[A-Za-z]','',e)) for e in all_names]) + ind_seg
 
@@ -282,13 +293,13 @@ def place_nodes_tetra(nvecs, nodes_dir):
 		
 		laff_all = np.c_[anf, aff_all, chg, all_inds, [bbind] * len(anf)]
 		if "tetracenter" in cif:
-			placed_edge_center_coords.append(laff_all)
-			placed_nbb_coords.append(laff_all)
+			placed_edge_center_coords.extend(laff_all)
+			placed_nbb_coords.extend(laff_all)
 			tetra_node_name.append(name)
 		else:
-			frame_nbb_coords.append(laff_all)
-			placed_nbb_coords.append(laff_all)
-		all_bonds.append(abf)
+			frame_nbb_coords.extend(laff_all)
+			placed_nbb_coords.extend(laff_all)
+		all_bonds.extend(abf)
 		ind_seg = ind_seg + len(all_names)
 
 	return placed_nbb_coords, placed_edge_center_coords,frame_nbb_coords,tetra_node_name,all_bonds

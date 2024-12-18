@@ -361,7 +361,7 @@ def add_dummy_atoms_nodecif(ciffile,metal):
                 sG.remove_edge(mn,nO)
             #order ccords based on template order
             ordered_ccoords=order_ccoords(d_ccoords,template_metal_D)
-            ordered_fcoords = np.dot(np.linalg.inv(unit_cell),ordered_ccoords).T
+            ordered_fcoords = np.dot(np.linalg.inv(unit_cell),ordered_ccoords.T).T
             for row in range(len(d_ccoords)):
                 sG.add_node('D'+str(count), type='D', index=index, ccoords=ordered_ccoords[row] , fcoords=ordered_fcoords[row] , cn=[], cifname=[])
                 sG.add_edge(mn,'D'+str(count))

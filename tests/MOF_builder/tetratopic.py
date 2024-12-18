@@ -388,7 +388,7 @@ class MOF_tetra:
 		placed_frame_node,_ = placed_arr(frame_node_ccoords)
 		placed_frame_node_fc = np.hstack((placed_frame_node[:,0:1],(np.dot(np.linalg.inv(sc_unit_cell),placed_frame_node[:,1:4].T)).T,placed_frame_node[:,4:]))		
 		
-		tetratopic_edges_fcoords = merge_multitopic_node_edge_fc(TG,tetra_node_name,placed_nodes_fc,placed_edges_fc)		
+		tetratopic_edges_fcoords = merge_multitopic_node_edge_fc(TG,sc_unit_cell,tetra_node_name,placed_nodes_fc,placed_edges_fc)		
 		target_all_fc = np.vstack((placed_frame_node_fc,tetratopic_edges_fcoords))
         #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason of using above version node is because we need xoo in node for terminations adding
 		box_bound= supercell+1
@@ -533,7 +533,7 @@ class MOF_tetra:
 		n_terms_cc = np.vstack((n_terms_loose))
 		self.n_terms_cc = n_terms_cc
 
-		#add -COOH term to exposed edge and change edge name to HEDGE
+		#add -COOH term to exposed edge and change edge name to HEDGE #  #TODO: need to follow order XX NOTE: 
 		cleaved_metal_node = main_frag_nodes_cc[metal_node_indices]
 		t_edges = terminate_unsaturated_edges(e_termfile,unsaturated_main_frag_edges,eG,main_frag_edges_cc,linker_topics)
 		node_edge_term_cc= np.vstack((cleaved_metal_node,t_edges,n_terms_cc))

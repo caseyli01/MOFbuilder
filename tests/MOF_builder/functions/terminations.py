@@ -58,6 +58,7 @@ def is_list_A_in_B(A, B):
     B_tuples = set(convert_to_tuple(b) for b in B)
     # Check if all elements in A are in B
     return A_tuples.issubset(B_tuples)
+
 def add_terminations(term_file,ex_node_cxo_cc):
     tG=nx.Graph()
     terms=[]

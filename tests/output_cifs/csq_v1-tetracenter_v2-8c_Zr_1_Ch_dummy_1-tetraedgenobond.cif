@@ -1,5 +1,5 @@
 data_csq_v1-tetracenter_v2-8c_Zr_1_Ch_dummy_1-tetraedgenobond
-_audit_creation_date              2024-12-04
+_audit_creation_date              2024-12-10
 _audit_creation_method            'tobacco_3.0'
 _symmetry_space_group_name_H-M    'P1'
 _symmetry_Int_Tables_number       1

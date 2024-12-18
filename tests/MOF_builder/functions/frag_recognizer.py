@@ -229,7 +229,7 @@ def get_bonds_from_subgraph(subgraph,Xs_indices):
 
 def create_cif(name_label_coords, bonds, foldername,cifname):
 	opath = os.path.join(foldername, cifname)
-	
+	print(opath,'is writen')
 	with open(opath, 'w') as out:
 		out.write('data_' + cifname[0:-4] + '\n')
 		out.write('_audit_creation_date              ' + datetime.datetime.today().strftime('%Y-%m-%d') + '\n')
@@ -278,6 +278,7 @@ def create_cif(name_label_coords, bonds, foldername,cifname):
 			out.write('\n')
 
 
+
 def process_linker_molecule(molecule,linker_topic):
     coords=molecule.get_coordinates_in_angstrom()
     labels = molecule.get_labels()
@@ -296,6 +297,7 @@ def process_linker_molecule(molecule,linker_topic):
         print("tritopic/tetratopic/multitopic: center is a cycle")
         connected_pairXs = {}
         Xs_indices = []
+        innerX_coords =[]
         for k in range(len(center_nodes)):
             linker_C_l = []
             l_list = []
@@ -313,6 +315,8 @@ def process_linker_molecule(molecule,linker_topic):
                     lG.remove_edge(inner_X[0],center_nodes[k])
                     connected_pairXs[center_nodes[k]]=('inner_X', inner_X[0],'outer_X', outer_X[0])
                     Xs_indices+=[center_nodes[k],inner_X[0],outer_X[0]]
+                    innerX_coords.append(lG.nodes[inner_X[0]]['coords'])
+
         if nx.number_connected_components(lG) != linker_topic+1: #for check linker_topics+1  
             print("wrong fragments")
             raise ValueError
@@ -371,7 +375,7 @@ def process_linker_molecule(molecule,linker_topic):
                         print("find connected X in edge:  ",outer_X[0])
                         Xs_indices+=[outer_X[0]]
     else:
-        print("failed to recognize a multitopic linker whose center is not a cycle")
+        raise ValueError("failed to recognize a multitopic linker whose center is not a cycle")
 
     #write cifs
 

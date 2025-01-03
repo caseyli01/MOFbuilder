@@ -1,8 +1,8 @@
 ;
 ;	File 'mdout.mdp' was generated
 ;	By user: root (501)
-;	On host: n137-p187.eduroam.kth.se
-;	At date: Tue Dec 10 15:08:21 2024
+;	On host: n136-p10.eduroam.kth.se
+;	At date: Mon Dec 30 14:02:38 2024
 ;
 ;	Created by:
 ;	                :-) GROMACS - gmx grompp, 2024.4-Homebrew (-:
@@ -25,7 +25,7 @@ integrator               = md
 ; Start time and timestep in ps
 tinit                    = 0
 dt                       = 0.001
-nsteps                   = 10000
+nsteps                   = 50000
 ; For exact run continuation or redoing part of a run
 init-step                = 0
 ; Part index is updated automatically on checkpointing (keeps files separate)
@@ -175,7 +175,7 @@ annealing-temp           =
 ; GENERATE VELOCITIES FOR STARTUP RUN
 gen_vel                  = yes
 gen_temp                 = 100
-gen_seed                 = 536864734
+gen_seed                 = -17023123
 
 ; OPTIONS FOR BONDS    
 constraints              = none

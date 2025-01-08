@@ -246,7 +246,6 @@ def node_vecs(node, G, unit_cell, label):
 		shifted_edge_coords = [[v[0], v[1] - ec_com] for v in edge_coords]
 	else:
 		shifted_edge_coords = [vec - ec_com for vec in edge_coords]
-
 	return shifted_edge_coords
 
 def edge_vecs(edge, G, unit_cell):

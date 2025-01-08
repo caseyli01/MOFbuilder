@@ -141,7 +141,7 @@ def bb2array(cifname, direc):
 	norm_vec = fcoords[0][1]
 	ccoords = [[n[0],np.dot(unit_cell, PBC3DF(norm_vec, n[1]))] for n in fcoords]
 	#ccoords = [[n[0],np.dot(unit_cell, n[1])] for n in fcoords]
-	com = np.average(np.array([n[1] for n in ccoords if re.sub('[0-9]','',n[0]) == 'X']), axis = 0)
+	com = np.average(np.array([n[1] for n in ccoords if re.sub('[0-9]','',n[0]) == 'X']), axis = 0) #center of mass
 	sccoords = [[n[0], n[1] - com] for n in ccoords]
 
 	return sccoords
@@ -359,3 +359,63 @@ def O_vecs(cifname, direc, label):
 
 	return shifted_ccoords
 
+
+def selected_type_vecs(cifname, direc,atom_type,label):
+
+	path = os.path.join(direc, cifname)
+
+	with open(path, 'r') as cif:
+		cif = cif.read()
+		cif = filter(None, cif.split('\n'))
+
+	fcoords = []
+	fcoords_append = fcoords.append
+	allatoms_fcoords =[]
+
+	for line in cif:
+		s = line.split()
+		if '_cell_length_a' in line:
+			a = s[1]
+		if '_cell_length_b' in line:
+			b = s[1]
+		if '_cell_length_c' in line:
+			c = s[1]
+		if '_cell_angle_alpha' in line:
+			alpha = s[1]
+		if '_cell_angle_beta' in line:
+			beta = s[1]
+		if '_cell_angle_gamma' in line:
+			gamma = s[1]
+		if iscoord(s):
+			fvec = np.array([float(q) for q in s[2:5]])
+			allatoms_fcoords.append([s[0],fvec])
+			if atom_type in s[0]:
+				fcoords_append([s[0],fvec])
+
+	pi = np.pi
+	a,b,c,alpha,beta,gamma = list(map(float, (a,b,c,alpha,beta,gamma)))
+	ax = a
+	ay = 0.0
+	az = 0.0
+	bx = b * np.cos(gamma * pi / 180.0)
+	by = b * np.sin(gamma * pi / 180.0)
+	bz = 0.0
+	cx = c * np.cos(beta * pi / 180.0)
+	cy = (c * b * np.cos(alpha * pi /180.0) - bx * cx) / by
+	cz = (c ** 2.0 - cx ** 2.0 - cy ** 2.0) ** 0.5
+	unit_cell = np.asarray([[ax,ay,az],[bx,by,bz],[cx,cy,cz]]).T
+
+	mic_fcoords = [[vec[0],PBC3DF(fcoords[0][1],vec[1])] for vec in fcoords]
+	allatoms_mic_fcoords = [[vec[0],PBC3DF(allatoms_fcoords[0][1],vec[1])] for vec in allatoms_fcoords]
+	allatoms_ccoords = [np.dot(unit_cell,vec[1]) for vec in allatoms_mic_fcoords]
+	com = np.average(allatoms_ccoords, axis=0)
+	if label:
+		ccoords = [[vec[0],np.dot(unit_cell,vec[1])] for vec in mic_fcoords]
+		#com = np.average(np.asarray([vec[1] for vec in ccoords]), axis=0)
+		shifted_ccoords = [[vec[0],vec[1] - com] for vec in ccoords]
+	else:
+		ccoords = [np.dot(unit_cell,vec[1]) for vec in mic_fcoords]
+		#com = np.average(allatoms_ccoords, axis=0)
+		shifted_ccoords = [vec - com for vec in ccoords]
+
+	return shifted_ccoords

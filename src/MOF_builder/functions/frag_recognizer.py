@@ -82,7 +82,7 @@ def find_center_cycle_nodes(lG):
             return cycle
         
 def distinguish_G_centers(lG):
-    centers = nx.center(lG)
+    centers = nx.barycenter(lG)
     if len(centers)==1:
         print('center is a point')
         center_class = 'onepoint'
@@ -425,4 +425,5 @@ def process_linker_molecule(molecule,linker_topic):
         create_cif(lines,center_frag_bonds,'edges','diedge.cif')
         print('center_frag:',subgraph_center_frag.number_of_nodes(),center_Xs)
         return (subgraph_center_frag.number_of_nodes(),center_Xs,0,[])
+
         

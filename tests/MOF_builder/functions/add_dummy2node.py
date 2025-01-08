@@ -385,7 +385,7 @@ def add_dummy_atoms_nodecif(ciffile,metal):
     for mn in metal_nodes:
         neighbor_nodes = list(nx.neighbors(sG,mn))
         Ocheck = all(nn(i)=='O' for i in neighbor_nodes)
-        if (len(neighbor_nodes)==8 and Ocheck):
+        if (len(neighbor_nodes)==8 and Ocheck): #Zr is 8, Al is 6, Fe is 6, Cr is 6#TODO: add more metals
             #add dummy
             beginning_cc = sG.nodes[mn]['ccoords']
             beginning_fc = sG.nodes[mn]['fcoords']
@@ -437,7 +437,7 @@ def add_dummy_atoms_nodecif(ciffile,metal):
 
     sub_headlens = [len(i) for i in head]
     sub_taillens = [len(i) for i in tail]
-    sum(sub_headlens)+sum(sub_taillens),sub_headlens,sub_taillens
+    print(head,sum(sub_headlens)+sum(sub_taillens),sub_headlens,sub_taillens)
 
 
     dummy_count=0
@@ -445,6 +445,7 @@ def add_dummy_atoms_nodecif(ciffile,metal):
     ho_count=0
     o_count=0
     ooc_count = 0
+    dummy_res_len=0
 
     for i in sub_headlens:
         if i==3:

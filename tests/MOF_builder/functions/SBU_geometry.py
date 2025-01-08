@@ -8,7 +8,7 @@ def SBU_coords(TG, ea_dict, csbl):
 
 	TG: A networkx graph object representing the target graph.
 	ea_dict: Edge assignment dictionary containing vector information for each node.
-	csbl: Constant to be added to the calculated edge lengths, likely a structural parameter.
+	csbl: Constant to be added to the calculated edge lengths, CONNECTION_SITE_BOND_LENGTH.
 	'''
 	SBU_coords = [] #SBU_coords: List to store the coordinates of SBUs.
 	SBU_coords_append = SBU_coords.append

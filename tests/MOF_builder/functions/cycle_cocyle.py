@@ -165,14 +165,16 @@ def Bstar_alpha(CB, CO, TG, num_edges):
 			ind = out_edge[0]
 			s,e = out_edge[1]
 			positive_direction = TG[s][e][ke]['pd'] 
-
 			if '_a' not in s and '_a' not in e:
 				if s == v:
 					o = e
+					print('s == v &o==e',s,v,o,e)
 				else:
 					o = s
+					print('s == v&o==s',s,v,o,e)
 				v_ind = int(re.sub('[A-Za-z]','',v))
 				o_ind = int(re.sub('[A-Za-z]','',o))
+
 				if v_ind < o_ind:
 					cd = 1
 				else:

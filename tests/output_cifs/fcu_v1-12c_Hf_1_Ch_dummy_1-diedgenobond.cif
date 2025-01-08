@@ -1,5 +1,5 @@
 data_fcu_v1-12c_Hf_1_Ch_dummy_1-diedgenobond
-_audit_creation_date              2024-12-30
+_audit_creation_date              2025-01-03
 _audit_creation_method            'tobacco_3.0'
 _symmetry_space_group_name_H-M    'P1'
 _symmetry_Int_Tables_number       1

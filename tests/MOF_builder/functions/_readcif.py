@@ -117,6 +117,7 @@ def extract_symmetry_operation_from_lines(symmetry_sector):
             symmetry_operation.append(no_space_string)
     if len(symmetry_operation) < 2:
         print(f"{len(symmetry_operation)}  no symmetry operation")
+        symmetry_operation = ['x,y,z']
     else:
         print(f"{len(symmetry_operation)}  symmetry operation")
 

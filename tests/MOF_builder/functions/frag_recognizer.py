@@ -260,7 +260,7 @@ def create_cif(name_label_coords, bonds, foldername,cifname):
 			cvec = np.dot(m, vec)
 	
 			
-			cvec = np.mod(cvec, 1)
+			#cvec = np.mod(cvec, 1)
 			extra = '   0.00000  Uiso   1.00       -0.000000'
 			out.write('{:7} {:>4} {:>15} {:>15} {:>15}'.format(l[0], l[1], "%.10f" % np.round(cvec[0],10), "%.10f" % np.round(cvec[1],10), "%.10f" % np.round(cvec[2],10)))
 			out.write(extra)

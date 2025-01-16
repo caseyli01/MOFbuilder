@@ -10,6 +10,21 @@ def find_keyword(keyword,s):
         return True
     else:
         return False
+def extract_unit_cell(cell_info):
+    pi = np.pi
+    aL, bL, cL, alpha, beta, gamma = cell_info
+    aL,bL,cL,alpha,beta,gamma = list(map(float, (aL,bL,cL,alpha,beta,gamma)))
+    ax = aL
+    ay = 0.0
+    az = 0.0
+    bx = bL * np.cos(gamma * pi / 180.0)
+    by = bL * np.sin(gamma * pi / 180.0)
+    bz = 0.0
+    cx = cL * np.cos(beta * pi / 180.0)
+    cy = (cL * bL * np.cos(alpha * pi /180.0) - bx * cx) / by
+    cz = (cL ** 2.0 - cx ** 2.0 - cy ** 2.0) ** 0.5
+    unit_cell = np.asarray([[ax,ay,az],[bx,by,bz],[cx,cy,cz]]).T
+    return unit_cell
 
 def read_cif(cif_file):
     with open(cif_file, "r") as f:
@@ -85,7 +100,7 @@ def read_cif(cif_file):
     return cell_info, symmetry_sector, atom_site_sector
 
 
-def extract_atoms_xyz_from_lines(atom_site_sector):
+def extract_atoms_fcoords_from_lines(atom_site_sector):
     atom_site_lines = []
     keyword = "_"
     for line in atom_site_sector:  # search for keywords and get linenumber
@@ -103,6 +118,27 @@ def extract_atoms_xyz_from_lines(atom_site_sector):
             else:
                 array_xyz[i, (j - 2)] = remove_bracket(atom_site_lines[i].split()[j])
     return array_atom, array_xyz
+
+def extract_atoms_ccoords_from_lines(cell_info,atom_site_sector):
+    atom_site_lines = []
+    keyword = "_"
+    for line in atom_site_sector:  # search for keywords and get linenumber
+        m = re.search(keyword, line)
+        if m is None:
+            atom_site_lines.append(line)
+
+    array_atom = np.zeros((len(atom_site_lines), 1), dtype=object)
+    array_xyz = np.zeros((len(atom_site_lines), 3))
+
+    for i in range(len(atom_site_lines)):
+        for j in [0, 2, 3, 4]:
+            if j == 0:
+                array_atom[i, j] = remove_tail_number(atom_site_lines[i].split()[j])
+            else:
+                array_xyz[i, (j - 2)] = remove_bracket(atom_site_lines[i].split()[j])
+    unit_cell = extract_unit_cell(cell_info)
+    array_ccords=np.dot(unit_cell,array_xyz.T).T    
+    return array_atom, array_ccords
 
 
 def extract_symmetry_operation_from_lines(symmetry_sector):
@@ -170,9 +206,34 @@ def apply_sym_operator(symmetry_operations, array_metal_xyz):
     return unique_metal_array, unique_indices
 
 
-def extract_type_atoms_array_in_primitive_cell(cif_file, target_type):
+def extract_type_atoms_ccoords_in_primitive_cell(cif_file, target_type):
     cell_info, symmetry_sector, atom_site_sector = read_cif(cif_file)
-    array_atom, array_xyz = extract_atoms_xyz_from_lines(atom_site_sector)
+    array_atom, array_fcoords= extract_atoms_fcoords_from_lines(atom_site_sector)
+    unit_cell = extract_unit_cell(cell_info)
+    if len(symmetry_sector) > 1:  # need to apply symmetry operations
+        print(f"apply {len(symmetry_sector)} symmetry operation")
+        array_metal_xyz = array_fcoords[array_atom[:, 0] == target_type]
+        array_metal_xyz = np.round(array_metal_xyz, 3)
+        symmetry_sector_neat = extract_quote_lines(symmetry_sector)
+        symmetry_operations = extract_symmetry_operation_from_lines(
+            symmetry_sector_neat
+        )
+        no_sym_array_metal_xyz, no_sym_indices = apply_sym_operator(
+            symmetry_operations, array_metal_xyz
+        )
+        array_metal_fcoords_final = no_sym_array_metal_xyz
+        array_ccoords = np.dot(unit_cell,array_fcoords.T).T
+        array_metal_ccoords_final = np.dot(unit_cell,array_metal_fcoords_final.T).T
+    else:  # P1
+        print("P1 cell")
+        array_metal_ccoords = array_fcoords[array_atom[:, 0] == target_type]
+        array_metal_ccoords_final = np.dot(unit_cell,array_metal_ccoords.T).T
+        array_ccoords = np.dot(unit_cell,array_fcoords.T).T
+    return cell_info, array_ccoords, array_metal_ccoords_final
+
+def extract_type_atoms_fcoords_in_primitive_cell(cif_file, target_type):
+    cell_info, symmetry_sector, atom_site_sector = read_cif(cif_file)
+    array_atom, array_xyz= extract_atoms_fcoords_from_lines(atom_site_sector)
 
     if len(symmetry_sector) > 1:  # need to apply symmetry operations
         print(f"apply {len(symmetry_sector)} symmetry operation")
@@ -192,7 +253,8 @@ def extract_type_atoms_array_in_primitive_cell(cif_file, target_type):
         array_metal_xyz = array_xyz[array_atom[:, 0] == target_type]
 
         array_metal_xyz_final = np.round(array_metal_xyz, 3)
-    return cell_info, array_atom, array_metal_xyz_final
+    return cell_info, array_xyz, array_metal_xyz_final
+
 
 
 def extract_node_center(array):
@@ -210,7 +272,7 @@ def _extract_metal_node_center_cif(
     cif_file, metal_type, atom_number_in_cluster, cluster_distance_threshhold
 ):
     # array_atom only has the information of atom_type from the cif file and keep the same order with cif
-    cell_info, array_atom, array_metal_xyz = extract_type_atoms_array_in_primitive_cell(
+    cell_info, array_atom, array_metal_xyz = extract_type_atoms_fcoords_in_primitive_cell(
         cif_file, metal_type
     )
     metal_xyz_supercell = _make_supercell222(array_metal_xyz)
@@ -280,7 +342,7 @@ def search_O_cluster_in_node(
 ):
     # find cluster of O in node
     array_node_center_in_frame = node_in_frame
-    cell_info, atom_O_name, array_atom_O = extract_type_atoms_array_in_primitive_cell(
+    cell_info, atom_O_name, array_atom_O = extract_type_atoms_fcoords_in_primitive_cell(
         cif_file, define_type
     )
     array_atom_O = make_supercell333(array_atom_O)

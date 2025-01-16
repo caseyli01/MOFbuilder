@@ -440,8 +440,8 @@ class MOF_ditopic:
 		new_beginning_fc = find_new_node_beginning(frame_node_fc)		
 		placed_nodes_arr,nodes_id=placed_arr(placed_nodes)
 		placed_edges_arr,edges_id=placed_arr(placed_edges)		
-		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],np.dot(placed_nodes_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_nodes_arr[:,4:]))
-		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],np.dot(placed_edges_arr[:,1:4],np.linalg.inv(sc_unit_cell))-new_beginning_fc,placed_edges_arr[:,4:]))		
+		placed_nodes_fc = np.hstack((placed_nodes_arr[:,0:1],np.dot(np.linalg.inv(sc_unit_cell),placed_nodes_arr[:,1:4].T).T-new_beginning_fc,placed_nodes_arr[:,4:]))
+		placed_edges_fc = np.hstack((placed_edges_arr[:,0:1],np.dot(np.linalg.inv(sc_unit_cell),placed_edges_arr[:,1:4].T).T-new_beginning_fc,placed_edges_arr[:,4:]))		
 			
 		target_all_fc = np.vstack((placed_nodes_fc,placed_edges_fc))
         #target_all_fc = np.vstack((placed_nodes_fc,tetratopic_edges_fcoords)) # the reason for use above version node is because we need xoo in node for terminations adding
@@ -450,7 +450,7 @@ class MOF_ditopic:
 		connected_nodeedge_fc, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose=cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)		
 		terms_cc_loose = terminate_nodes(term_file,boundary_connected_nodes_res,connected_nodeedge_fc,sc_unit_cell,box_bound)
 
-		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],np.dot(connected_nodeedge_fc[:,-3:],sc_unit_cell)))
+		connected_nodeedge_cc = np.hstack((connected_nodeedge_fc[:,:-3],np.dot(sc_unit_cell,connected_nodeedge_fc[:,-3:].T).T))
 		#print(connected_nodeedge_cc.shape,terms_cc_loose.shape)
 
 		node_edge_term_cc_loose = np.vstack((connected_nodeedge_cc,terms_cc_loose))		

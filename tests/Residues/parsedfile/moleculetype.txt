@@ -1,0 +1,4 @@
+[ moleculetype ]
+;name            nrexcl
+TCP                  3
+

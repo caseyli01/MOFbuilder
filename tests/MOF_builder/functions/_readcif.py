@@ -138,7 +138,7 @@ def extract_atoms_ccoords_from_lines(cell_info,atom_site_sector):
                 array_xyz[i, (j - 2)] = remove_bracket(atom_site_lines[i].split()[j])
     unit_cell = extract_unit_cell(cell_info)
     array_ccords=np.dot(unit_cell,array_xyz.T).T    
-    return array_atom, array_ccords
+    return unit_cell,array_atom, array_ccords
 
 
 def extract_symmetry_operation_from_lines(symmetry_sector):

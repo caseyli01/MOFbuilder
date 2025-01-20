@@ -102,12 +102,69 @@ def calculate_eG_net_ditopic(edgefc_centers,nodefc_centers,linker_topics):
             for i in n_candidates:
                 if i[0] == le_list[0]:
                     eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
-                    eG.add_edge(e_eG_node,i[1][0])
+                    eG.add_edge(e_eG_node,i[1][0],type='real')
                 elif (i[0] <= le_list[linker_topics-1]) & (i[0]< 1.3*le_list[0]) :
-                    #print(i[0],le_list[:4],1.3*le_list[0])
+
                     eG.add_nodes_from([(i[1][0],{'fc':i[1][1],'Odist':i[1][2]})])
-                    eG.add_edge(e_eG_node,i[1][0])
+                    eG.add_edge(e_eG_node,i[1][0],type='real')
     return eG
+
+
+
+def locate_min_idx(matrix):
+    min_idx = np.unravel_index(matrix.argmin(), matrix.shape)
+    return min_idx[0],min_idx[1]
+
+
+def calculate_eG_net_ditopic_PILLAR(edgefc_centers,nodefc_centers,linker_topics):
+    #calculate and add all edge_center as node to eG, then search for node_center in a range(around closest node distance)
+    #this eG is searching neighbor nodes from edge, so the absolute isolated nodes (just single node) cannot be counted because it cannot be found from an edge 
+    eG=nx.Graph()
+    for i in edgefc_centers:
+        eG.add_nodes_from([('E'+str(i[0]), {'fc': i[1],'Odist': i[2]})])
+        print('E'+str(i[0]),i[1],i[2])
+    #2 rounds: round1, search for closest node, round2, search for 2nd closest node
+    e_n_distance_matrix = np.zeros((len(edgefc_centers),len(nodefc_centers)))
+    for i in range(len(edgefc_centers)):
+        for j in range(len(nodefc_centers)):
+            e_n_distance_matrix[i,j] = np.linalg.norm(edgefc_centers[i][1] - nodefc_centers[j][1])
+
+    #nodes can be shared, so hungrain algorithm is not suitable
+    for m in range(len(edgefc_centers)):
+        e_n_min_distance = np.min(e_n_distance_matrix[m:m+1,:])
+        if e_n_min_distance < 0.6:
+            _,e_n = locate_min_idx(e_n_distance_matrix[m:m+1,:])
+            
+            eG.add_nodes_from([(nodefc_centers[e_n][0],{'fc':nodefc_centers[e_n][1],'Odist':nodefc_centers[e_n][2]})])
+            eG.add_edge('E'+str(edgefc_centers[m][0]),nodefc_centers[e_n][0],type='real')
+            e_n_distance_matrix[m,e_n] = 1000
+        _, sec_round_n = locate_min_idx(e_n_distance_matrix[m:m+1,:])
+        if e_n_distance_matrix[m,sec_round_n] < 0.6:
+            _,e_k = locate_min_idx(e_n_distance_matrix[m:m+1,:])
+            eG.add_nodes_from([(nodefc_centers[e_k][0],{'fc':nodefc_centers[e_k][1],'Odist':nodefc_centers[e_k][2]})])
+            eG.add_edge('E'+str(edgefc_centers[m][0]),nodefc_centers[e_k][0],type='real')
+
+       
+
+    #add pillar nodes virtual edges
+    n_n_distance_matrix = np.zeros((len(nodefc_centers),len(nodefc_centers)))
+    for i in range(len(nodefc_centers)):
+        for j in range(len(nodefc_centers)):
+            n_n_distance_matrix[i,j] = np.linalg.norm(nodefc_centers[i][1] - nodefc_centers[j][1])
+        n_n_distance_matrix[i,i] = 1000
+    #use hungrain algorithm to find the shortest path between all nodes
+    
+
+    for i in range(len(nodefc_centers)):
+        n_n_min_distance = np.min(n_n_distance_matrix[i:i+1,:])
+        if n_n_min_distance < 0.6:
+            n_i,n_j = locate_min_idx(n_n_distance_matrix[i:i+1,:])
+            eG.add_nodes_from([(nodefc_centers[i][0],{'fc':nodefc_centers[i][1],'Odist':nodefc_centers[i][2]})])
+            eG.add_nodes_from([(nodefc_centers[n_j][0],{'fc':nodefc_centers[n_j][1],'Odist':nodefc_centers[n_j][2]})])
+            eG.add_edge(nodefc_centers[i][0],nodefc_centers[n_j][0],type='virtual')
+    return eG
+
+
 
 
 

@@ -119,14 +119,20 @@ def exposed_xoo_cc(eG, unsaturated_main_frag_nodes, main_frag_nodes_cc, con_node
     # main_frag_nodes_cc: main fragment nodes coordinates
     # con_nodes_x_dict: dictionary of connected nodes
     # xoo_dict: dictionary of 'XOO' pairs
+    print("con_nodes_x_dict", list(con_nodes_x_dict))
 
     ex_node_cxo_cc = []
 
     for exnode_info in unsaturated_main_frag_nodes:
-        exnode_id = exnode_info[0]
+        exnode_id = exnode_info[0] 
+        
         node_center_fc = eG.nodes[exnode_id]['fc']
         ex_node = main_frag_nodes_cc[main_frag_nodes_cc[:, 5] == exnode_id]
-        ex_x_idx = [i for i in list(xoo_dict) if i not in con_nodes_x_dict[exnode_id]]
+        try:
+            ex_x_idx = [i for i in list(xoo_dict) if i not in con_nodes_x_dict[exnode_id]]
+        except KeyError:
+            ex_x_idx = [i for i in list(xoo_dict)]
+
         for ix in ex_x_idx:
             ex_x = ex_node[ix][-3:]
             ex_x = ex_x.astype('float')

@@ -388,14 +388,14 @@ def correct_neighbor_nodes_order_by_edge_xs_order(eG, edge_n, single_edge):
 			if l < min_l:
 				min_l = l
 				near_node = n
-		
+
 		ordered_neinodes.append(near_node) if near_node not in ordered_neinodes else  None
 	return ordered_neinodes
 
 def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_edges_fc,sc_unit_cell):
-
-    xoo_ind_node0 = xoo_pair_ind_node(main_frag_nodes_fc,main_frag_nodes[0],sc_unit_cell)
-    xoo_ind_node1 = xoo_pair_ind_node(main_frag_nodes_fc,main_frag_nodes[1],sc_unit_cell)
+	#quick check the order of xoo in every node are same 
+    xoo_ind_node0 = xoo_pair_ind_node(main_frag_nodes_fc,main_frag_nodes[0],sc_unit_cell) #pick node one and get xoo_ind pair
+    xoo_ind_node1 = xoo_pair_ind_node(main_frag_nodes_fc,main_frag_nodes[1],sc_unit_cell) #pick node two and get xoo_ind pair
     if xoo_ind_node0 == xoo_ind_node1:
         xoo_dict={}
         for xoo in xoo_ind_node0:
@@ -412,6 +412,7 @@ def addxoo2edge(eG,main_frag_nodes,main_frag_nodes_fc,main_frag_edges,main_frag_
         c_edge=eG.nodes[i]
         c_edge_fc = c_edge['fc']
         neighbor_nodes=correct_neighbor_nodes_order_by_edge_xs_order(eG,i,single_edge)
+        print(neighbor_nodes,'neighbor_nodes', i)
         single_edge = replace_Xbyx(single_edge)
         #print(neighbor_nodes,'neighbor_nodes')
         for inn in neighbor_nodes:

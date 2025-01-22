@@ -1,6 +1,18 @@
 import re 
 import numpy as np
 
+def remove_blank_space(value):
+    return re.sub("\s", "", value)
+
+def remove_empty_lines(lines):
+    newlines = []
+    for i in range(len(lines)):
+        if lines[i].strip() != "":
+            newlines.append(lines[i])
+    return newlines
+
+def add_quotes(value):
+    return "'" + value + "'"
 
 def remove_note_lines(lines):
     newlines = []
@@ -16,6 +28,15 @@ def extract_quote_lines(lines):
     for i in range(len(lines)):
         if lines[i].strip()[0] == "'":
             newlines.append(lines[i])
+    return newlines
+
+def extract_xyz_lines(lines):
+    newlines = []
+    for i in range(len(lines)):
+        if lines[i].strip()[0] != "_":
+            quote_value = add_quotes(remove_blank_space(lines[i]).strip())
+            newlines.append(quote_value)
+        newlines = remove_empty_lines(newlines)
     return newlines
 
 

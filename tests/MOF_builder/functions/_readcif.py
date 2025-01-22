@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from _process_cifstr import remove_bracket,remove_tail_number,remove_quotes,extract_quote_lines,extract_xyz_coefficients_and_constant
+from _process_cifstr import remove_bracket,remove_tail_number,remove_quotes,extract_quote_lines,extract_xyz_coefficients_and_constant,extract_xyz_lines
 from _supercell import make_supercell333,_make_supercell222
 from _filter_distance import filter_neighbor_atoms_by_dist,O_filter_neighbor_atoms_by_dist
 
@@ -152,10 +152,10 @@ def extract_symmetry_operation_from_lines(symmetry_sector):
             no_space_string = string.replace(" ", "")
             symmetry_operation.append(no_space_string)
     if len(symmetry_operation) < 2:
-        print(f"{len(symmetry_operation)}  no symmetry operation")
+        print(" no symmetry operation")
         symmetry_operation = ['x,y,z']
     else:
-        print(f"{len(symmetry_operation)}  symmetry operation")
+        print(f"apply {len(symmetry_operation)}  symmetry operation")
 
     return symmetry_operation
 
@@ -211,10 +211,12 @@ def extract_type_atoms_ccoords_in_primitive_cell(cif_file, target_type):
     array_atom, array_fcoords= extract_atoms_fcoords_from_lines(atom_site_sector)
     unit_cell = extract_unit_cell(cell_info)
     if len(symmetry_sector) > 1:  # need to apply symmetry operations
-        print(f"apply {len(symmetry_sector)} symmetry operation")
+        #print(f"apply {len(symmetry_sector)} symmetry operation")
         array_metal_xyz = array_fcoords[array_atom[:, 0] == target_type]
         array_metal_xyz = np.round(array_metal_xyz, 3)
         symmetry_sector_neat = extract_quote_lines(symmetry_sector)
+        if len(symmetry_sector_neat) < 2:
+            symmetry_sector_neat = extract_xyz_lines(symmetry_sector)
         symmetry_operations = extract_symmetry_operation_from_lines(
             symmetry_sector_neat
         )
@@ -236,10 +238,12 @@ def extract_type_atoms_fcoords_in_primitive_cell(cif_file, target_type):
     array_atom, array_xyz= extract_atoms_fcoords_from_lines(atom_site_sector)
 
     if len(symmetry_sector) > 1:  # need to apply symmetry operations
-        print(f"apply {len(symmetry_sector)} symmetry operation")
+        #print(f"apply {len(symmetry_sector)} symmetry operation")
         array_metal_xyz = array_xyz[array_atom[:, 0] == target_type]
         array_metal_xyz = np.round(array_metal_xyz, 3)
         symmetry_sector_neat = extract_quote_lines(symmetry_sector)
+        if len(symmetry_sector_neat) < 2: # if no quote, then find x,y,z
+            symmetry_sector_neat = extract_xyz_lines(symmetry_sector)
         symmetry_operations = extract_symmetry_operation_from_lines(
             symmetry_sector_neat
         )
@@ -262,7 +266,6 @@ def extract_node_center(array):
     node_center=np.empty((len(array),3))
     for i in range(len(array)):
          node_center[i]=np.mean(array[i],axis=0)
-    print(node_center)
     return node_center
 
 
@@ -347,7 +350,7 @@ def search_O_cluster_in_node(
     )
     array_atom_O = make_supercell333(array_atom_O)
 
-    print(f"atom_O_name{atom_O_name}")
+    #print(f"atom_O_name{atom_O_name}")
     Oinnode = O_filter_neighbor_atoms_by_dist(
         O_atom_numbers_in_a_node,
         array_node_center_in_frame,
@@ -385,5 +388,5 @@ def reorder_O_clusters_based_on_node_order(metal_O_pair, O_clusters):
         O_cluster = O_clusters[metal_O_pair[i][1]]
         reordered_O_clusters_array[i] = O_cluster
         reordered_O_cluster_center = np.mean(O_cluster, axis=0)
-        print(f"reordered_O_center{reordered_O_cluster_center}")
+        #print(f"reordered_O_center{reordered_O_cluster_center}")
     return reordered_O_clusters_array

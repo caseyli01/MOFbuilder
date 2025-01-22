@@ -1,7 +1,9 @@
 import numpy as np
 import networkx as nx
-from scipy.spatial.distance import pdist
+from itertools import combinations
+from scipy.spatial.distance import pdist,squareform
 from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial import KDTree
 from _readcif import extract_type_atoms_fcoords_in_primitive_cell
 # use cell_info to generate the matrix for the unit cell to get cartesian coordinates
 def make_supercell_3x3x3(array_xyz):
@@ -37,6 +39,38 @@ def make_supercell_3x3x3(array_xyz):
     
     return supercell_3x3x3
 
+
+def filter_overlapping_points(points, min_distance):
+    """
+    Filters out points that are too close to each other based on a minimum distance,
+    using KDTree for efficient neighbor searching.
+
+    Parameters:
+        points (np.ndarray): Array of shape (N, D) where N is the number of points and D is the dimensionality.
+        min_distance (float): Minimum distance allowed between points.
+
+    Returns:
+        np.ndarray: Array of filtered points.
+    """
+    # Build a KDTree for fast neighbor searching
+    tree = KDTree(points)
+    
+    # Keep track of points to remove
+    to_keep = np.ones(len(points), dtype=bool)
+    
+    for i in range(len(points)):
+        if not to_keep[i]:
+            continue  # Skip points already removed
+
+        # Find neighbors within min_distance (excluding self)
+        indices = tree.query_ball_point(points[i], min_distance)
+        indices.remove(i)  # Remove self-index
+        
+        # Mark neighbors for removal
+        to_keep[indices] = False
+    
+    return points[to_keep]
+
 def extract_unit_cell(cell_info):
     pi = np.pi
     aL, bL, cL, alpha, beta, gamma = cell_info
@@ -59,10 +93,13 @@ def find_cluster_center(array_atom):
     center = np.mean(array_atom,axis=0)
     return center
 
+
 def clust_analysis_points(array_atom,distance_threshhold):
     #use scipy.cluster distance, to cluster the points
     #find the distance matrix
     dist = pdist(array_atom)
+ 
+    #dist = dist_matrix_exclude_overlapping_pair(array_atom)
     #find the linkage matrix
     Z = linkage(dist, 'ward')
     #find the cluster
@@ -73,10 +110,92 @@ def clust_analysis_points(array_atom,distance_threshhold):
         cluster_center.append(find_cluster_center(array_atom[cluster==i]))
     return cluster_center
 
-def extract_cluster_center_from_templatecif(cif_file, target_type,cluster_distance_threshhold):
+#use pdist to calculate the distance between the points
+#use squreform to get the distance matrix
+def c2f_coords(coords,unit_cell):
+    unit_cell_inv = np.linalg.inv(unit_cell)
+    fc = np.dot(unit_cell_inv,coords.T).T
+    return fc
+
+def cluster_analysis_bridging_node(array_points,unit_cell,cluster_size,distance_threshold):
+    fcoords = c2f_coords(array_points,unit_cell)
+
+    #sep cell_points and cell_out points
+    cell_in_points = [array_points[ind] for ind, i in enumerate(fcoords) if check_inside_unit_cell(i)]
+    cell_out_points = [array_points[ind] for ind, i in enumerate(fcoords) if not check_inside_unit_cell(i)]
+
+    #reorder array_points, cell_in_points should be at head,  cell_out_points at tail
+    array_points = np.vstack((cell_in_points,cell_out_points))
+
+    #find cluster in cell_in_points
+    pdist_matrix = pdist(array_points)
+    squareform_matrix = squareform(pdist_matrix)
+    connection_map = {ind:[] for ind in range(len(cell_in_points))}
+    #loop over the cell_in points, if the distance between two points in the cupercell is less than the distance_threshold, mark them as connected points
+    for i in range(len(cell_in_points)):
+        for j in range(len(array_points)):
+            if squareform_matrix[i][j]<distance_threshold:
+                connection_map[i].append(j)
+    # Generate the center of clusters based on all possible combinations of the neighbors
+    clusters = []
+    for node, neighbors in connection_map.items():
+        for combi in combinations(neighbors, cluster_size):
+            if node in combi:
+                clusters.append(tuple(sorted(combi)))
+    set_clusters = set(clusters)
+    clust_cc_centers =[]
+    for clus in set_clusters:
+        clus_atoms = [array_points[i] for i in clus]
+        clust_cc_centers.append(find_cluster_center(clus_atoms))
+
+    return clust_cc_centers
+
+
+##def debug_cluster(cif_file, target_type,cluster_distance_threshhold):
+##    cell_info, array_atom, array_target_atoms =extract_type_atoms_fcoords_in_primitive_cell(cif_file, target_type)
+##    unit_cell = extract_unit_cell(cell_info)
+##    #unit_cell = np.round(unit_cell,3)
+##    metal333 = make_supercell_3x3x3(array_target_atoms)
+##    metal333 = np.vstack(metal333)
+##    #cluster analysis in cartesian coordinates
+##    array_metal_ccords = np.dot(unit_cell,metal333.T).T
+##    return array_metal_ccords,unit_cell 
+  
+
+
+def extract_bridge_point_cluster_center_from_templatecif(cif_file, target_type,cluster_size, cluster_distance_threshhold):
     cell_info, array_atom, array_target_atoms =extract_type_atoms_fcoords_in_primitive_cell(cif_file, target_type)
     unit_cell = extract_unit_cell(cell_info)
-    unit_cell = np.round(unit_cell,3)
+    #unit_cell = np.round(unit_cell,3)
+    metal333 = make_supercell_3x3x3(array_target_atoms)
+    metal333 = np.vstack(metal333)
+    #cluster analysis in cartesian coordinates
+    array_metal_ccords = np.dot(unit_cell,metal333.T).T
+  
+    #cluster_centers_ccoords=clust_analysis_points(array_metal_ccords,cluster_distance_threshhold)
+    cluster_centers_ccoords=cluster_analysis_bridging_node(array_metal_ccords,unit_cell,cluster_size, cluster_distance_threshhold)
+    if len(cluster_centers_ccoords)==0:
+        raise ValueError('No cluster center found')
+    cluster_centers_ccoords = np.vstack(cluster_centers_ccoords)
+    #cluster_centers should return fractional coordinates
+    cluster_centers_fcoords = np.dot(np.linalg.inv(unit_cell),cluster_centers_ccoords.T).T
+    #filter cluster centers which is inside the unit cell, boundary condition is [-0.01,1.01]
+    
+    cluster_centers_fcoords = np.mod(cluster_centers_fcoords,1)
+    cluster_centers_fcoords = filter_overlapping_points(cluster_centers_fcoords, 0.001)
+    cluster_centers_fcoords = np.round(cluster_centers_fcoords,3)
+    #cluster_centers_fcoords = [c for c in cluster_centers_fcoords if all([i>=-0.01 and i<=1.01 for i in c])]
+    
+    #not consider the overlapped or too close points, use numpy isclose to filter the points
+
+
+
+    return cluster_centers_fcoords,cell_info,unit_cell
+
+def extract_cluster_center_from_templatecif(cif_file, target_type,cluster_size, cluster_distance_threshhold):
+    cell_info, array_atom, array_target_atoms =extract_type_atoms_fcoords_in_primitive_cell(cif_file, target_type)
+    unit_cell = extract_unit_cell(cell_info)
+    #unit_cell = np.round(unit_cell,3)
     metal333 = make_supercell_3x3x3(array_target_atoms)
     metal333 = np.vstack(metal333)
     #cluster analysis in cartesian coordinates
@@ -86,11 +205,13 @@ def extract_cluster_center_from_templatecif(cif_file, target_type,cluster_distan
     #cluster_centers should return fractional coordinates
     cluster_centers_fcoords = np.dot(np.linalg.inv(unit_cell),cluster_centers_ccoords.T).T
     #filter cluster centers which is inside the unit cell, boundary condition is [-0.01,1.01]
-    cluster_centers_fcoords = [c for c in cluster_centers_fcoords if all([i>=-0.01 and i<=1.01 for i in c])]
-    cluster_centers_fcoords = np.mod(cluster_centers_fcoords,1)
     cluster_centers_fcoords = np.round(cluster_centers_fcoords,3)
+    cluster_centers_fcoords = np.mod(cluster_centers_fcoords,1)
+    #cluster_centers_fcoords = [c for c in cluster_centers_fcoords if all([i>=-0.01 and i<=1.01 for i in c])]
+    
     cluster_centers_fcoords = np.unique(cluster_centers_fcoords,axis=0)
     return cluster_centers_fcoords,cell_info,unit_cell
+
 
 
 

@@ -178,7 +178,7 @@ def _axis_objective_function(thetas, axis, static_atom_positions, G,sorted_nodes
 
     return total_distance
 
-def axis_optimize_rotations(axis, num_nodes,G,sorted_nodes,sorted_edges, atom_positions):
+def axis_optimize_rotations(axis, num_nodes,G,sorted_nodes,sorted_edges, atom_positions,opt_methods="L-BFGS-B",maxfun=15000):
     """
     Optimize the rotation angles around a given axis to minimize the difference between
     rotated and target positions for each node.
@@ -199,7 +199,7 @@ def axis_optimize_rotations(axis, num_nodes,G,sorted_nodes,sorted_edges, atom_po
     #edge_pairings = find_edge_pairings(sorted_edges, atom_positions)
     result = minimize(axis_objective_function, initial_thetas, 
                       args=(axis,  static_atom_positions,G,sorted_nodes,sorted_edges), 
-                      method='L-BFGS-B',options={"maxiter": 5000, "disp": True})
+                      method=opt_methods,options={"maxiter": 5000, "disp": True,"maxfun": maxfun})
     optimized_thetas = result.x
 
     # Compute the rotation matrices for each node
@@ -282,15 +282,29 @@ def objective_function(params, G, static_atom_positions, sorted_nodes,sorted_edg
         rotated_i_positions = np.dot(static_atom_positions[i][:,1:] - com_i, R_i.T) + com_i
         rotated_j_positions = np.dot(static_atom_positions[j][:,1:] - com_j, R_j.T) + com_j
 
-
+        dist_matrix = np.empty((len(rotated_i_positions), len(rotated_j_positions)))    
         for idx_i in range(len(rotated_i_positions)):
             for idx_j in range(len(rotated_j_positions)):
                 dist = np.linalg.norm(rotated_i_positions[idx_i] - rotated_j_positions[idx_j])
-                total_distance += dist ** 2
+                dist_matrix[idx_i, idx_j] = dist
+                total_distance += (dist ** 3)
+        for idx_i in range(len(rotated_i_positions)):
+            diff = max(dist_matrix[idx_i,:]) - min(dist_matrix[idx_i, :])
+            if diff > 1:
+                total_distance += 10000/diff 
+            else:#penalty for the distance difference
+                total_distance += 1e5
+        for idx_j in range(len(rotated_j_positions)):
+            diff = max(dist_matrix[:,idx_j]) - min(dist_matrix[:, idx_j])
+            if diff > 1:
+                total_distance += 10000/diff 
+            else:#penalty for the distance difference
+                total_distance += 1e5
+
 
     return total_distance
 
-def optimize_rotations(num_nodes,G,sorted_nodes,sorted_edges,atom_positions):
+def optimize_rotations(num_nodes,G,sorted_nodes,sorted_edges,atom_positions,opt_methods="L-BFGS-B",maxfun=15000):
     """
     Optimize rotations for all nodes in the graph.
 
@@ -302,6 +316,8 @@ def optimize_rotations(num_nodes,G,sorted_nodes,sorted_edges,atom_positions):
         list: Optimized rotation matrices for all nodes.
     """
     initial_rotations = np.tile(np.eye(3), (num_nodes, 1)).flatten()
+    #get a better initial guess, use random rotation matrix combination
+    #initial_rotations  = np.array([reorthogonalize_matrix(np.random.rand(3,3)) for i in range(num_nodes)]).flatten()
     static_atom_positions = atom_positions.copy()
     # Precompute edge-specific pairings
     #edge_pairings = find_edge_pairings(sorted_edges, atom_positions)
@@ -310,8 +326,8 @@ def optimize_rotations(num_nodes,G,sorted_nodes,sorted_edges,atom_positions):
         objective_function,
         initial_rotations,
         args=(G, static_atom_positions, sorted_nodes,sorted_edges),
-        method="L-BFGS-B",
-        options={"maxiter": 5000, "disp": True } 
+        method=opt_methods,
+        options={"maxiter": 5000, "disp": True,"maxfun": maxfun},
     )
 
     

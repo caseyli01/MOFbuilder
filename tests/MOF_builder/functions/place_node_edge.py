@@ -45,6 +45,12 @@ def get_edge_lengths(G):
         lengths.append(length)
     if len(set(lengths)) != 1:
         print('more than one type of edge length')
+        #if the length are close, which can be shown by std 
+        if np.std(lengths) < 0.1:
+            print('the edge lengths are close')
+        else:
+            print('the edge lengths are not close')
+        print(set(lengths))
     return edge_lengths,set(lengths)
 
 def update_node_ccoords(G,edge_lengths,start_node,new_edge_length):

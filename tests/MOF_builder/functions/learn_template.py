@@ -205,11 +205,12 @@ def extract_cluster_center_from_templatecif(cif_file, target_type,cluster_size, 
     #cluster_centers should return fractional coordinates
     cluster_centers_fcoords = np.dot(np.linalg.inv(unit_cell),cluster_centers_ccoords.T).T
     #filter cluster centers which is inside the unit cell, boundary condition is [-0.01,1.01]
-    cluster_centers_fcoords = np.round(cluster_centers_fcoords,3)
+    #cluster_centers_fcoords = np.round(cluster_centers_fcoords,3)
     cluster_centers_fcoords = np.mod(cluster_centers_fcoords,1)
     #cluster_centers_fcoords = [c for c in cluster_centers_fcoords if all([i>=-0.01 and i<=1.01 for i in c])]
-    
-    cluster_centers_fcoords = np.unique(cluster_centers_fcoords,axis=0)
+    cluster_centers_fcoords = filter_overlapping_points(cluster_centers_fcoords, 0.001)
+    cluster_centers_fcoords = np.round(cluster_centers_fcoords,3)
+    #cluster_centers_fcoords = np.unique(cluster_centers_fcoords,axis=0)
     return cluster_centers_fcoords,cell_info,unit_cell
 
 

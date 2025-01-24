@@ -76,6 +76,12 @@ def calculate_eG_net(edgefc_centers,nodefc_centers,linker_topics,sc_unit_cell):
     return eG
 
 
+
+
+
+
+
+
 def calculate_eG_net_ditopic(edgefc_centers,nodefc_centers,linker_topics):
     #calculate and add all edge_center as node to eG, then search for node_center in a range(around closest node distance)
     #this eG is searching neighbor nodes from edge, so the absolute isolated nodes (just single node) cannot be counted because it cannot be found from an edge 

@@ -510,5 +510,5 @@ def cluster_supercell(sc_unit_cell,supercell_Carte,linker_topics,target_all_fc,b
     print("row_diff_idx_loose",row_diff_idx_loose)
     safe_res_fc_loose,extra_res_fc_loose,boundary_node_res_loose = filt_boundary_res_loose_check(s_fvec_all_loose,row_diff_idx_loose,box_bound,scalar,cutx,cuty,cutz,boundary_scalar)
     bare_nodeedge_fc_loose=np.vstack((safe_res_fc_loose,extra_res_fc_loose))
-    connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG = filter_connected_node_loose(bare_nodeedge_fc_loose,boundary_node_res_loose,linker_topics,sc_unit_cell)
+    connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG =  filter_connected_node_loose(bare_nodeedge_fc_loose,boundary_node_res_loose,linker_topics,sc_unit_cell)
     return connected_nodeedge_fc_loose, boundary_connected_nodes_res,eG,bare_nodeedge_fc_loose

@@ -373,7 +373,7 @@ def apply_rotations_to_atom_positions(optimized_rotations, G,sorted_nodes, atom_
         translated_positions = original_positions - com
         rotated_translated_positions = np.dot(translated_positions, R.T)
         rotated_positions[node] = rotated_translated_positions + com
-
+        
     return rotated_positions
 
 

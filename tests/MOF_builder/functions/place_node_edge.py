@@ -96,7 +96,7 @@ def place_edgeinnodeframe(sorted_nodes,optimized_pair,node_atom,linker_atom,link
         xx_vector = np.vstack([x_i-x_i_x_j_middle_point,x_j-x_i_x_j_middle_point])
         norm_xx_vector = xx_vector/np.linalg.norm(xx_vector)
         norm_xx_vector = np.round(xx_vector,6)
-        print(i,j,reindex_i,reindex_j,x_idx_i,x_idx_j)
+        #print(i,j,reindex_i,reindex_j,x_idx_i,x_idx_j) #DEBUG
         #use superimpose to get the rotation matrix
         #use record to record the rotation matrix for get rid of the repeat calculation
         indices = [index for index, value in enumerate(norm_xx_vector_record) if is_list_A_in_B(norm_xx_vector, value)]

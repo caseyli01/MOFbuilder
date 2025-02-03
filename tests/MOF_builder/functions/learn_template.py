@@ -298,14 +298,14 @@ def set_DE_E(G):
     #all_e = np.vstack([limit_to_abs1(edge) for edge in all_e])
     #limit x,y,z of e to [-1,1]
     unique_e = np.vstack(find_unitcell_e(all_e))
-    print(unique_e)
+    #print(unique_e) #debug
     for e in G.edges():
         if np.any(np.all(np.isclose(G.edges[e]['fc_center'],unique_e),axis=1)):
             G.edges[e]['type'] = 'E'
-            print(G.edges[e]['fc_center'],'E')
+            #print(G.edges[e]['fc_center'],'E') #debug
         else:
             G.edges[e]['type'] = 'DE'
-            print(G.edges[e]['fc_center'],'DE')
+            #print(G.edges[e]['fc_center'],'DE') #debug
     return G
 
 #firstly, check if all V nodes have highest connectivity

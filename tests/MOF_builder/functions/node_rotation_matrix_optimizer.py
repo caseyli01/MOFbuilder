@@ -6,7 +6,7 @@ from scipy.optimize import minimize
 from place_node_edge import unit_cell_to_cartesian_matrix, fractional_to_cartesian
 
 def locate_min_idx(a_array):
-    print(a_array,np.min(a_array))
+    #print(a_array,np.min(a_array))
     idx = np.argmin(a_array)
     row_idx = idx // a_array.shape[1]
     col_idx = idx % a_array.shape[1]
@@ -390,9 +390,9 @@ def find_optimal_pairings(node_i_positions, node_j_positions):
             cost_matrix[i, j] = np.linalg.norm(node_i_positions[i,1:] - node_j_positions[j,1:])
 
     #row_ind, col_ind = linear_sum_assignment(cost_matrix)
-    print(cost_matrix.shape)
+    #print(cost_matrix.shape) #DEBUG
     row_ind, col_ind = locate_min_idx(cost_matrix)
-    print(row_ind,col_ind,cost_matrix)
+    #print(row_ind,col_ind,cost_matrix) #DEBUG
   
 
     return [row_ind,col_ind]
@@ -430,7 +430,7 @@ def find_edge_pairings(sorted_nodes,sorted_edges, atom_positions):
         # Find optimal pairings for this edge
         
         pairs = find_optimal_pairings(node_i_positions, node_j_positions)
-        print(sorted_nodes[i],sorted_nodes[j],pairs)
+        #print(sorted_nodes[i],sorted_nodes[j],pairs) #DEBUG
         edge_pairings[(i, j)] = pairs #update_pairs(pairs,atom_positions,i,j)
         #idx_0,idx_1 = pairs[0]
         #x_idx_0 = atom_positions[i][idx_0][0]
@@ -471,14 +471,14 @@ def apply_rotations_to_xxxx_positions(optimized_rotations, G,sorted_nodes,sorted
         rotated_translated_positions = np.dot(translated_positions, R.T)
         rotated_positions[i][:,1:] = rotated_translated_positions + com
     edge_pair=find_edge_pairings(sorted_nodes, sorted_edges_of_sortednodeidx, rotated_positions)
-    print("Optimized Pairings (after optimization):")
+    #print("Optimized Pairings (after optimization):") #DEBUG
     
     optimized_pair = {}
 
     for (i, j), pair in edge_pair.items():
-        print(f"Node {sorted_nodes[i]} and Node {sorted_nodes[j]}:")
+        #print(f"Node {sorted_nodes[i]} and Node {sorted_nodes[j]}:") #DEBUG
         idx_i, idx_j = pair
-        print(f"  node{sorted_nodes[i]}_{int(idx_i)} -- node{sorted_nodes[j]}_{int(idx_j)}")
+        #print(f"  node{sorted_nodes[i]}_{int(idx_i)} -- node{sorted_nodes[j]}_{int(idx_j)}") #DEBUG
         optimized_pair[sorted_nodes[i],sorted_nodes[j]] = (int(idx_i),int(idx_j))
  
 
@@ -487,13 +487,14 @@ def apply_rotations_to_xxxx_positions(optimized_rotations, G,sorted_nodes,sorted
 
 #use optimized_params to update all of nodes ccoords in G, according to the fccoords
 def update_ccoords_by_optimized_cell_params(G,optimized_params):
+    sG = G.copy()
     a,b,c,alpha,beta,gamma = optimized_params
     T_unitcell = unit_cell_to_cartesian_matrix(a,b,c,alpha,beta,gamma)
     updated_ccoords = {}
-    for n in G.nodes():
-        updated_ccoords[n] = fractional_to_cartesian(T_unitcell,G.nodes[n]['fcoords'].T).T
-        G.nodes[n]['ccoords'] = updated_ccoords[n]
-    return G,updated_ccoords
+    for n in sG.nodes():
+        updated_ccoords[n] = fractional_to_cartesian(T_unitcell,sG.nodes[n]['fcoords'].T).T
+        sG.nodes[n]['ccoords'] = updated_ccoords[n]
+    return sG,updated_ccoords
 
 
 
